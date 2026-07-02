@@ -32,9 +32,13 @@ def create_user(db: DbSession, user: UserCreate):
           password_hash = hash_password(user.password)
      )
      #add it to the db
-     db.add(new_user)
-     db.commit()
-     db.refresh(new_user)
+     try:
+          db.add(new_user)
+          db.commit()
+          db.refresh(new_user)
+     except Exception as e:
+          db.rollback()
+          raise HTTPException(status_code=400, detail=str(e))
      return new_user
 
 @router.get('/{user_id}', response_model=UserRead)
