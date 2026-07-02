@@ -67,8 +67,13 @@ def update_user(user_id: int, user_update: UserUpdate, db: DbSession):
                raise HTTPException(status_code=400, detail="Email already exists")
           else:
                user.email = user_update.email
-     db.commit()
-     db.refresh(user)
+     try:
+          db.add(user)
+          db.commit()
+          db.refresh(user)
+     except Exception as e:
+          db.rollback()
+          raise HTTPException(status_code=400, detail=str(e))
      return user
 
 @router.delete('/{user_id}', status_code=status.HTTP_200_OK)
@@ -76,6 +81,10 @@ def delete_user(user_id: int, db: DbSession):
      user = db.get(UserModel,user_id)
      if not user:
           raise HTTPException(status_code=404, detail="User not found")
-     db.delete(user)
-     db.commit()
+     try:
+          db.delete(user)
+          db.commit()
+     except Exception as e:
+          db.rollback()
+          raise HTTPException(status_code=400, detail=str(e))
      return
