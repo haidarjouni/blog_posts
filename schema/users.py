@@ -15,10 +15,13 @@ class UserUpdate(BaseModel):
      username: str | None = None
      email: EmailStr | None = None
      
-class TokenData(BaseModel):
+class TokenRequest(BaseModel):
      user_id: int | None = None
-     email: EmailStr | None = None
      
 class Token(BaseModel):
      access_token: str
      token_type: str
+     refresh_token: str
+     
+class RefreshTokenRequest(BaseModel):
+     refresh_token: str

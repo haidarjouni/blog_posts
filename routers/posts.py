@@ -144,3 +144,40 @@ def create_comment(post_id: int, comment: CommentCreate, db: DbSession, current_
           raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
      
      return new_comment
+
+
+@router.patch("/comments/{comment_id}", response_model=CommentRead)
+def update_comment( comment_id: int, comment_update: CommentCreate, db: DbSession, current_user: Annotated[User, Depends(get_current_active_user)]):
+     comment = db.get(Comment, comment_id)
+
+     if comment.author_id != current_user.id:
+          raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to update this comment")
+     
+     if comment_update.content is not None:
+          comment.content = comment_update.content
+     
+     try:
+          db.commit()
+          db.refresh(comment)
+     except Exception as e:
+          db.rollback()
+          raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+     
+     return comment
+
+@router.delete("/comments/{comment_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_comment(comment_id: int, db: DbSession, current_user: Annotated[User, Depends(get_current_active_user)]):
+     comment = db.get(Comment, comment_id)
+     
+     if not comment:
+          raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Comment not found")
+     
+     if comment.author_id != current_user.id:
+          raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to delete this comment")
+     
+     try:
+          db.delete(comment)
+          db.commit()
+     except Exception as e:
+          db.rollback()
+          raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

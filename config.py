@@ -11,12 +11,12 @@ class Settings:
      db_connection_string: str
      algorithm: str = "HS256"
      access_token_expire_minutes: int = 30
+     refresh_token_expire_days: int = 30
     
     
 def get_settings() -> Settings:
      secret_key = os.environ.get("SECRET_KEY")
      db_connection_string = os.getenv("DB_CONNECTION_STRING")
-
      if not secret_key:
           raise RuntimeError("SECRET_KEY is required")
      
@@ -27,7 +27,8 @@ def get_settings() -> Settings:
           secret_key=secret_key,
           algorithm=os.environ.get("ALGORITHM", "HS256"),
           access_token_expire_minutes=int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", "30")),
-          db_connection_string=db_connection_string
+          db_connection_string=db_connection_string,
+          refresh_token_expire_days=int(os.environ.get("REFRESH_TOKEN_EXPIRE_DAYS", "30"))
      )
 
 settings = get_settings()

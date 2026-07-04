@@ -5,3 +5,4 @@ from .post import Post
 from .post_tags import PostsTags
 from .tag import Tag
 from .user import User
+from .refresh_tokens import RefreshToken
