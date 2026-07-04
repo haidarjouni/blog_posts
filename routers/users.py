@@ -7,9 +7,15 @@ from database import get_db
 from models.user import User as UserModel
 from schema.users import UserRead, UserCreate, UserUpdate
 from services.passwordhashing import hash_password
+from services.auth import oauth2_scheme
+from services.auth import get_current_active_user
 router = APIRouter()
 
 DbSession = Annotated[Session, Depends(get_db)]
+
+@router.get("/me", response_model=UserRead)
+def get_current_user_info(current_user: Annotated[UserModel, Depends(get_current_active_user)]):
+    return current_user
 
 @router.get('/', response_model=list[UserRead])
 def get_users(db: DbSession):

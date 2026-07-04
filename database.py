@@ -1,8 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from config import DB_CONNECTION_STRING
+from config import settings
 
-engine = create_engine(DB_CONNECTION_STRING)
+engine = create_engine(settings.db_connection_string)
 SessionLocal = sessionmaker(bind=engine)
 def get_db():
      db = SessionLocal()

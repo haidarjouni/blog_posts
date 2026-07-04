@@ -5,7 +5,6 @@ from .categories import CategoryRead
 from .tags import TagRead
 class PostCreate(BaseModel):
      title: str
-     author_id: int
      category_id: int 
      content: str
      status: str = "published"
@@ -29,3 +28,11 @@ class PostUpdate(BaseModel):
      
 class PostReadDetailed(PostRead):
      comments: list[CommentRead] = []
+     
+class PostUpdateWithStatus(PostUpdate):
+     status: str | None = None
+     title: str | None = None
+     category_id: int  | None = None
+     content: str | None = None
+     status: str = "published"
+     tags: list[int] | None = None

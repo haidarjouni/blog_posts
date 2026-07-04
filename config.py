@@ -1,24 +1,33 @@
 ﻿import os
 from pathlib import Path
+from dataclasses import dataclass
+from dotenv import load_dotenv
 
+load_dotenv()
 
-def load_env_file() -> None:
-     env_path = Path(__file__).with_name(".env")
-     if not env_path.exists():
-          return
+@dataclass(frozen=True)
+class Settings:
+     secret_key: str
+     db_connection_string: str
+     algorithm: str = "HS256"
+     access_token_expire_minutes: int = 30
+    
+    
+def get_settings() -> Settings:
+     secret_key = os.environ.get("SECRET_KEY")
+     db_connection_string = os.getenv("DB_CONNECTION_STRING")
 
-     for line in env_path.read_text().splitlines():
-          line = line.strip()
-          if not line or line.startswith("#") or "=" not in line:
-               continue
+     if not secret_key:
+          raise RuntimeError("SECRET_KEY is required")
+     
+     if not db_connection_string:
+          raise RuntimeError("DB_CONNECTION_STRING is required")
+     
+     return Settings(
+          secret_key=secret_key,
+          algorithm=os.environ.get("ALGORITHM", "HS256"),
+          access_token_expire_minutes=int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", "30")),
+          db_connection_string=db_connection_string
+     )
 
-          key, value = line.split("=", 1)
-          os.environ.setdefault(key.strip(), value.strip())
-
-
-load_env_file()
-
-DB_CONNECTION_STRING = os.getenv("DB_CONNECTION_STRING")
-
-if not DB_CONNECTION_STRING:
-     raise RuntimeError("DB_CONNECTION_STRING is missing. Add it to your .env file.")
+settings = get_settings()
