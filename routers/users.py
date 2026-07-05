@@ -60,19 +60,17 @@ def update_user(user_id: int, user_update: UserUpdate, db: DbSession):
      if not user:
           raise HTTPException(status_code=404, detail="User not found")
      
-     if  user_update.username is not None :
-          existing_user = db.scalar(select(UserModel).where(UserModel.username == user_update.username, UserModel.id != user_id))
-          if existing_user:
-               raise HTTPException(status_code=400, detail="Username already exists")
-          else:
-               user.username = user_update.username
+     existing_user = db.scalar(select(UserModel).where(UserModel.username == user_update.username, UserModel.id != user_id))
+     if existing_user:
+          raise HTTPException(status_code=400, detail="Username already exists")
+     else:
+          user.username = user_update.username
                
-     if user_update.email is not None:
-          existing_user = db.scalar(select(UserModel).where(UserModel.email == user_update.email, UserModel.id != user_id))
-          if existing_user:
-               raise HTTPException(status_code=400, detail="Email already exists")
-          else:
-               user.email = user_update.email
+     existing_user = db.scalar(select(UserModel).where(UserModel.email == user_update.email, UserModel.id != user_id))
+     if existing_user:
+          raise HTTPException(status_code=400, detail="Email already exists")
+     else:
+          user.email = user_update.email
      try:
           db.add(user)
           db.commit()

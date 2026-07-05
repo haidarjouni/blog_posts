@@ -66,17 +66,16 @@ def update_tag(tag_id: int, tag_update: TagUpdate, db: DbSession):
      if not tag:
           raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Tag not found" )
 
-     if tag_update.name is not None:
-          slug = make_slug(tag_update.name)
+     slug = make_slug(tag_update.name)
 
-          # Check that another tag does not already use this name or slug.
-          existing_tag = db.scalar(select(Tag).where(((Tag.name == tag_update.name) | (Tag.slug == slug)),Tag.id != tag_id))
+     # Check that another tag does not already use this name or slug.
+     existing_tag = db.scalar(select(Tag).where(((Tag.name == tag_update.name) | (Tag.slug == slug)),Tag.id != tag_id))
 
-          if existing_tag:
-               raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Tag already exists")
+     if existing_tag:
+          raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Tag already exists")
 
-          tag.name = tag_update.name
-          tag.slug = slug
+     tag.name = tag_update.name
+     tag.slug = slug
      try:
           db.add(tag)
           db.commit()

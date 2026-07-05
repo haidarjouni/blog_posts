@@ -44,15 +44,21 @@ def get_category(category_id: int, db: DbSession):
 
 @router.patch('/{category_id}', response_model=CategoryRead)
 def update_category(category_id: int, category: CategoryUpdate, db: DbSession):
+     
+     if category is None:
+          raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No data provided for update')
+     
      if category.name is not None:
           raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Category name cannot be updated')
      
      existing_category = db.get(Category, category_id)
+     
      if not existing_category:
           raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Category not found')
 
      # Check that another category does not already use this name.
      duplicate_category = db.scalars(select(Category).where(Category.name == category.name, Category.id != category_id)).first()
+     
      if duplicate_category:
           raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Category name already exists')
           
@@ -61,6 +67,7 @@ def update_category(category_id: int, category: CategoryUpdate, db: DbSession):
           
      existing_category.name = category.name
      existing_category.slug = make_slug(category.name)
+     
      try:
           db.add(existing_category)
           db.commit()

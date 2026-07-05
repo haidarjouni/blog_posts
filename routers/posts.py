@@ -30,10 +30,7 @@ def create_post(post: PostCreate, db: DbSession, current_user: Annotated[User, D
      
      if not category:
           raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
-     
-     if not post.tags:
-          raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="At least one tag is required")
-     
+          
      unique_tag_ids = set(post.tags)
      tags = db.scalars(select(Tag).where(Tag.id.in_(unique_tag_ids))).all()
      
@@ -72,19 +69,23 @@ def update_post(post_id: int, post_update: PostUpdate, db: DbSession, current_us
      if post_update.title is not None:
           post.title = post_update.title
           post.slug = make_slug(post_update.title)
+          
      if post_update.content is not None:
           post.content = post_update.content
+          
      if post_update.category_id is not None:
           category = db.get(Category, post_update.category_id)
           if not category:
                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
           post.category_id = post_update.category_id
+          
      if post_update.tags is not None:
           unique_tag_ids = set(post_update.tags)
           tags = db.scalars(select(Tag).where(Tag.id.in_(unique_tag_ids))).all()
           if len(tags) != len(unique_tag_ids):
                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="One or more tags not found")
           post.tags = tags
+          
      if post_update.status is not None:
           post.status = post_update.status
      try:
@@ -151,7 +152,7 @@ def update_comment( comment_id: int, comment_update: CommentCreate, db: DbSessio
      comment = db.get(Comment, comment_id)
 
      if comment.author_id != current_user.id:
-          raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to update this comment")
+          raise HTTPException(status_code=status.HTTP_404_FORBIDDEN, detail="You are not authorized to update this comment")
      
      if comment_update.content is not None:
           comment.content = comment_update.content
