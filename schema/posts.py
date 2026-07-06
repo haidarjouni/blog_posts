@@ -3,7 +3,7 @@ from .comments import CommentRead
 from .users import UserRead
 from .categories import CategoryRead
 from .tags import TagRead
-
+from datetime import datetime
 ALLOWED_POST_STATUSES = {"draft", "published", "archived"}
 
 
@@ -29,6 +29,7 @@ class PostCreate(BaseModel):
      content: str = Field(min_length=1)
      status: str = "published"
      tags: list[int]
+     
 
      # This Pydantic decorator cleans title/content and rejects strings that are only spaces.
      @field_validator("title", "content")
@@ -59,7 +60,9 @@ class PostRead(BaseModel):
      status: str
      category: CategoryRead
      tags: list[TagRead] 
+     created_at: datetime
      model_config = ConfigDict(from_attributes=True)
+     
 
 class PostUpdate(BaseModel):
      title: str | None = Field(default=None, min_length=1, max_length=200)

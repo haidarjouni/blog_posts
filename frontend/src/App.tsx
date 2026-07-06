@@ -1,13 +1,14 @@
 import './App.css'
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import HomePage from "./pages/HomePage";
-import LoginPage from "./pages/LoginPage";
-import PostPage from "./pages/PostPage";
-import CreatePostPage from "./pages/CreatePostPage";
+import HomePage from "./routes/home/HomePage";
+import LoginPage from "./routes/users/LoginPage";
+import PostPage from "./routes/posts/PostPage";
+import CreatePostPage from "./routes/posts/CreatePostPage";
 import RootLayout from './layout/RootLayout';
-import CreateCategoryPage from './pages/CreateCategoryPage';
-import CreateTagPage from './pages/CreateTagPage';
-import UserPage from './pages/UserPage';
+import CreateCategoryPage from './routes/categories/CreateCategoryPage';
+import CreateTagPage from './routes/tags/CreateTagPage';
+import UserPage from './routes/users/UserPage';
+import { homeLoader } from './routes/Home/homeLoader';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -15,7 +16,8 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        Component: HomePage
+        Component: HomePage,
+        loader: homeLoader
       },
       {
         path: "User/:id",
