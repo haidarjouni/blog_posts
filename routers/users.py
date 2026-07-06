@@ -7,7 +7,6 @@ from database import get_db
 from models.user import User as UserModel
 from schema.users import UserRead, UserCreate, UserUpdate
 from services.passwordhashing import hash_password
-from services.auth import oauth2_scheme
 from services.auth import get_current_active_user
 router = APIRouter()
 

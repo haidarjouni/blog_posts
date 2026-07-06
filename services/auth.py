@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
-from fastapi import HTTPException
+from fastapi import HTTPException, Cookie
 from fastapi.params import Depends
-from fastapi.security import OAuth2PasswordBearer
+
 import jwt
 from sqlalchemy.orm import Session
 from config import settings
@@ -13,7 +13,6 @@ from services.passwordhashing import verify_password
 import secrets
 import hashlib
 from models.refresh_tokens import RefreshToken
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 # this is used to authenticate login credentials and return the user object if valid, otherwise return False
 def authenticate_user(username: str, password: str, db: Annotated[Session, Depends(get_db)]) -> User | bool:
@@ -51,15 +50,17 @@ def create_access_token(data:dict, expires_delta: timedelta | None = None):
      encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
      return encoded_jwt
 
-def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Annotated[Session, Depends(get_db)]):
+def get_current_user( db: Annotated[Session, Depends(get_db)], access_token: Annotated[str | None, Cookie()]= None):
      #gets the current authenticated user based on the token provided in the request header
      credentials_exception = HTTPException(
           status_code=401,
           detail="Could not validate credentials",
           headers={"WWW-Authenticate": "Bearer"},
      )
+     if not access_token:
+          raise credentials_exception
      try:
-          payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+          payload = jwt.decode(access_token, settings.secret_key, algorithms=[settings.algorithm])
           user_id: str = payload.get("sub")
           if user_id is None:
                raise credentials_exception
