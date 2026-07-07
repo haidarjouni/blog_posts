@@ -1,5 +1,5 @@
 import { redirect } from "react-router-dom";
-import { loginUser } from "../../api/login";
+import { loginUser } from "../../api/auth";
 import { logout } from "../../api/auth";
 export async function loginAction({ request }: { request: Request }) {
      const formData = await request.formData();

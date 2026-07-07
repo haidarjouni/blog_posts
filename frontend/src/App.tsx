@@ -10,9 +10,15 @@ import CreateTagPage from './routes/tags/CreateTagPage';
 import UserPage from './routes/users/UserPage';
 import { homeLoader } from './routes/home/homeLoader';
 import { loginAction, logoutAction } from './routes/login/loginAction';
-import { rootLoader } from './layout/rootloader';
+import { rootLoader } from './layout/rootLoader';
 import { signupAction } from './routes/signup/signupAction';
 import { SignupPage } from './routes/signup/SignupPage';
+import { createPostLoader, getPostByIdLoader } from './routes/posts/postsLoader';
+import { createPostsAction } from './routes/posts/postsAction';
+import { createCategoryAction } from './routes/categories/categoryActions';
+import { createCategoryLoader } from './routes/categories/categoryLoaders';
+import { createTagAction } from './routes/tags/tagActions';
+import { createTagLoader } from './routes/tags/tagLoaders';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -44,19 +50,26 @@ const router = createBrowserRouter([
       },
       {
         path: "posts/:id",
-        Component: PostPage
+        Component: PostPage,
+        loader: getPostByIdLoader
       },
       {
         path: "create-post",
-        Component: CreatePostPage
+        Component: CreatePostPage,
+        loader: createPostLoader,
+        action: createPostsAction
       },
       {
         path: "create-category",
-        Component: CreateCategoryPage
+        Component: CreateCategoryPage,
+        loader: createCategoryLoader,
+        action: createCategoryAction
       },
       {
         path: "create-tag",
-        Component: CreateTagPage
+        Component: CreateTagPage,
+        loader: createTagLoader,
+        action: createTagAction
       }
     ]
   }

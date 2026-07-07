@@ -3,3 +3,7 @@ export type TagRead = {
      name: string;
      slug: string;
 }
+
+export type TagCreate = {
+     name: string;
+}
