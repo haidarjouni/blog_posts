@@ -13,6 +13,7 @@ class UserRead(BaseModel):
      id: int = Field(gt=0)
      username: str
      email: EmailStr
+     is_admin: bool
      model_config = ConfigDict(from_attributes=True)
      
 class UserCreate(BaseModel):

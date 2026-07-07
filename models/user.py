@@ -1,6 +1,6 @@
 from typing import List
 
-from sqlalchemy import  DateTime, String, func
+from sqlalchemy import  DateTime, String, func, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from typing import TYPE_CHECKING
@@ -19,6 +19,7 @@ class User(Base):
      username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
      email : Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
      password_hash: Mapped[str] = mapped_column(String(128), nullable=False)
+     is_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
      created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
      updated_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), nullable=False,server_default=func.now(), onupdate=func.now())
      
