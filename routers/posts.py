@@ -22,7 +22,7 @@ def make_slug(name: str) -> str:
 
 @router.get("/", response_model=list[PostRead])
 def get_posts(db: DbSession):
-     return db.scalars(select(Post).options(selectinload(Post.tags), joinedload(Post.category), joinedload(Post.author))).all()
+     return db.scalars(select(Post).options(selectinload(Post.tags), joinedload(Post.category), joinedload(Post.author)).order_by(Post.created_at.desc())).all()
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=PostRead)
 def create_post(post: PostCreate, db: DbSession, current_user: Annotated[User, Depends(get_current_active_user)]):

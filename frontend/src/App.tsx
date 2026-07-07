@@ -14,7 +14,7 @@ import { rootLoader } from './layout/rootLoader';
 import { signupAction } from './routes/signup/signupAction';
 import { SignupPage } from './routes/signup/SignupPage';
 import { createPostLoader, getPostByIdLoader } from './routes/posts/postsLoader';
-import { createPostsAction } from './routes/posts/postsAction';
+import { createCommentAction, createPostsAction } from './routes/posts/postsAction';
 import { createCategoryAction } from './routes/categories/categoryActions';
 import { createCategoryLoader } from './routes/categories/categoryLoaders';
 import { createTagAction } from './routes/tags/tagActions';
@@ -51,7 +51,8 @@ const router = createBrowserRouter([
       {
         path: "posts/:id",
         Component: PostPage,
-        loader: getPostByIdLoader
+        loader: getPostByIdLoader,
+        action: createCommentAction
       },
       {
         path: "create-post",

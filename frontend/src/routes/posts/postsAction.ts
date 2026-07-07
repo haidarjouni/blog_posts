@@ -1,5 +1,5 @@
 import { redirect } from "react-router-dom";
-import { createPost } from "../../api/posts";
+import { createComment, createPost, deleteComment } from "../../api/posts";
 export async function createPostsAction({ request }: { request: Request }): Promise<Response> {
      const formData = await request.formData();
      const title = formData.get("title") as string;
@@ -17,3 +17,26 @@ export async function createPostsAction({ request }: { request: Request }): Prom
      return redirect(`/posts/${post.id}`)
 }
 
+export async function createCommentAction({request,params}: {request: Request; params: { id?: string };}): Promise<Response> {
+     const formData = await request.formData();
+     switch(String(formData.get("intent") || "")){
+          case "create-comment":
+               const content = String(formData.get("content")|| "");
+               if(!params.id){
+                    throw new Error("Post ID is required");
+               }
+               await createComment(Number(params.id), {
+                    content,
+               });
+               return redirect(`/posts/${params.id}`);
+          case "delete-comment":
+               const commentId = String(formData.get("comment_id")|| "");
+               if(!commentId){
+                    throw new Error("Comment ID is required");
+               }
+               await deleteComment(Number(commentId));
+               return redirect(`/posts/${params.id}`);
+          default:
+               throw new Error("Unknown action");
+     }
+}

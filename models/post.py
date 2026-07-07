@@ -27,5 +27,5 @@ class Post(Base):
      
      category: Mapped["Category"] = relationship("Category", back_populates="posts")
      author: Mapped["User"] = relationship("User", back_populates="posts")
-     comments: Mapped[list["Comment"]] = relationship("Comment", back_populates="post", cascade="all, delete-orphan")
+     comments: Mapped[list["Comment"]] = relationship("Comment", back_populates="post", cascade="all, delete-orphan", order_by="Comment.created_at.desc()")
      tags: Mapped[list["Tag"]] = relationship("Tag",secondary="post_tags",back_populates="posts")

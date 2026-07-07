@@ -5,3 +5,7 @@ export type CommentRead = {
      content: string;
      created_at: string;
 }
+
+export type CommentCreate = {
+     content: string;
+}
