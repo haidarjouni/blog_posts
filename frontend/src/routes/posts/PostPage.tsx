@@ -6,6 +6,7 @@ function PostPage() {
   const { post } = useLoaderData() as PostDetailLoaderData;
   const navigation = useNavigation();
   const [openCommentMenuId, setOpenCommentMenuId] = useState<number | null>(null);
+  const [openPostMenuId, setOpenPostMenuId] = useState<boolean>(false);
   const isSubmitting = navigation.state === "submitting";
   const paragraphs = post.content.split("\n").filter(Boolean);
   const user = useOutletContext<{ user: UserRead | null }>().user;
@@ -19,16 +20,50 @@ function PostPage() {
       </Link>
 
       <header className="mt-8 border-b border-gray-200 pb-10">
-        <div className="flex flex-wrap items-center gap-3">
-          <time className="text-sm font-semibold text-gray-400">
-            {post.created_at.split("T")[0]}
-          </time>
-          <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-800">
-            {post.category.name}
-          </span>
-          <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-            {post.status}
-          </span>
+        <div className="flex items-center justify-between">
+          <div className="flex flex-wrap gap-x-5">
+            <time className="text-sm font-semibold text-gray-400">
+              {post.created_at.split("T")[0]}
+            </time>
+            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-800">
+              {post.category.name}
+            </span>
+            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+              {post.status}
+            </span>
+          </div>
+          {user?.id === post.author.id && (
+            <>
+              <div className="relative">
+                <button
+                  type="button" aria-label="Comment actions"
+                  onClick={() => setOpenPostMenuId(!openPostMenuId)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-700">
+                  <span className="text-xl leading-none">...</span>
+                  </button>
+                    {openPostMenuId === true && (
+                      <div className="absolute right-0 top-10 z-10 w-36 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+                        <button
+                          type="button"
+                          className="block w-full px-4 py-2 text-left text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                        >
+                          Edit
+                        </button>
+                        <Form method="delete" >
+                          <input type="hidden" name="post_id" value={post.id} />
+                          <input type="hidden" name="intent" value="delete-post" />
+                          <button
+                            type="submit"
+                            className="block w-full px-4 py-2 text-left text-sm font-semibold text-red-600 hover:bg-red-50"
+                          >
+                            Delete
+                          </button>
+                        </Form>
+                      </div>
+                    )}
+                </div>
+            </>
+          )}  
         </div>
 
         <h1 className="mt-5 text-4xl font-bold leading-tight text-gray-900 sm:text-6xl">
@@ -126,36 +161,37 @@ function PostPage() {
                       </time>
                     </div>
                   </div>
+                  {user?.id === comment.author.id && (
+                    <div className="relative">
+                      <button
+                        type="button" aria-label="Comment actions"
+                        onClick={() =>setOpenCommentMenuId(openCommentMenuId === comment.id ? null : comment.id)}
+                        className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-700">
+                        <span className="text-xl leading-none">...</span>
+                      </button>
 
-                  <div className="relative">
-                    <button
-                      type="button" aria-label="Comment actions"
-                      onClick={() =>setOpenCommentMenuId(openCommentMenuId === comment.id ? null : comment.id)}
-                      className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-700">
-                      <span className="text-xl leading-none">...</span>
-                    </button>
-
-                    {(openCommentMenuId === comment.id && user?.id === comment.author.id) && (
-                      <div className="absolute right-0 top-10 z-10 w-36 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
-                        <button
-                          type="button"
-                          className="block w-full px-4 py-2 text-left text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                        >
-                          Edit
-                        </button>
-                        <Form method="delete" >
-                          <input type="hidden" name="comment_id" value={comment.id} />
-                          <input type="hidden" name="intent" value="delete-comment" />
+                      {openCommentMenuId === comment.id && (
+                        <div className="absolute right-0 top-10 z-10 w-36 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
                           <button
-                            type="submit"
-                            className="block w-full px-4 py-2 text-left text-sm font-semibold text-red-600 hover:bg-red-50"
+                            type="button"
+                            className="block w-full px-4 py-2 text-left text-sm font-semibold text-gray-700 hover:bg-gray-50"
                           >
-                            Delete
+                            Edit
                           </button>
-                        </Form>
-                      </div>
-                    )}
-                  </div>
+                          <Form method="delete" >
+                            <input type="hidden" name="comment_id" value={comment.id} />
+                            <input type="hidden" name="intent" value="delete-comment" />
+                            <button
+                              type="submit"
+                              className="block w-full px-4 py-2 text-left text-sm font-semibold text-red-600 hover:bg-red-50"
+                            >
+                              Delete
+                            </button>
+                          </Form>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <p className="mt-4 text-base leading-7 text-gray-700">

@@ -1,6 +1,6 @@
-import type {Posts, PostCreate, Post, PostDetail} from "../types/post";
+import type {PostCreate, PostRead, PostDetail} from "../types/post";
 import type {CommentCreate, CommentRead} from "../types/comment";
-export async function getPosts(): Promise<Posts> {
+export async function getPosts(): Promise<PostRead[]> {
      const response = await fetch("http://localhost:8000/api/posts/");
 
      if (!response.ok) {
@@ -10,7 +10,7 @@ export async function getPosts(): Promise<Posts> {
      return data;
 }
 
-export async function createPost(postData: PostCreate): Promise<Post> {
+export async function createPost(postData: PostCreate): Promise<PostRead> {
      const response = await fetch("http://localhost:8000/api/posts/", {
             method: "POST",
             credentials: "include",
@@ -35,6 +35,16 @@ export async function getPostById(postId: number): Promise<PostDetail> {
         }
         const data = await response.json();
         return data;
+}
+
+export async function deletePost(postId: number): Promise<void> {
+    const response = await fetch(`http://localhost:8000/api/posts/${postId}`, {
+        method: "DELETE",
+        credentials: "include"
+    });
+    if (!response.ok) {
+        throw new Error("Failed to delete post");
+    }
 }
 
 export async function createComment(postID: number, commentData: CommentCreate): Promise<CommentRead> {

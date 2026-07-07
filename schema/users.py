@@ -1,5 +1,9 @@
+from  datetime import datetime
+
 from pydantic import BaseModel, EmailStr, ConfigDict, Field, field_validator, model_validator
 
+from schema.tags import TagRead
+from .categories import CategoryRead
 
 def validate_username_value(username: str) -> str:
      username = username.strip()
@@ -8,7 +12,23 @@ def validate_username_value(username: str) -> str:
      if not username.replace("_", "").isalnum():
           raise ValueError("Username can only contain letters, numbers, and underscores")
      return username
+     
+class UserPostRead(BaseModel):
+     id: int
+     title: str
+     content: str
+     status: str
+     category: CategoryRead
+     tags: list[TagRead] = Field(default_factory=list)
+     created_at: datetime
+     model_config = ConfigDict(from_attributes=True)
 
+class UserCommentRead(BaseModel):
+     id: int
+     content: str
+     created_at: datetime
+     model_config = ConfigDict(from_attributes=True)
+     
 class UserRead(BaseModel):
      id: int = Field(gt=0)
      username: str
@@ -16,6 +36,10 @@ class UserRead(BaseModel):
      is_admin: bool
      model_config = ConfigDict(from_attributes=True)
      
+class UserDetails(UserRead):
+     posts: list[UserPostRead] = Field(default_factory=list)
+     comments: list[UserCommentRead] = Field(default_factory=list)
+          
 class UserCreate(BaseModel):
      username: str = Field(min_length=3, max_length=50)
      email: EmailStr

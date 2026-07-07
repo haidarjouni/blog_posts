@@ -19,6 +19,7 @@ import { createCategoryAction } from './routes/categories/categoryActions';
 import { createCategoryLoader } from './routes/categories/categoryLoaders';
 import { createTagAction } from './routes/tags/tagActions';
 import { createTagLoader } from './routes/tags/tagLoaders';
+import { userLoader } from './routes/users/userLoad';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -31,8 +32,9 @@ const router = createBrowserRouter([
         loader: homeLoader
       },
       {
-        path: "User/:id",
-        Component: UserPage
+        path: "users/:id",
+        Component: UserPage,
+        loader: userLoader
       },
       {
         path: "signup",

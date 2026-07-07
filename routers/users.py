@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Annotated
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from database import get_db
+from models.post import Post
 from models.user import User as UserModel
-from schema.users import UserRead, UserCreate, UserUpdate
+from schema.users import UserDetails, UserRead, UserCreate, UserUpdate
 from services.passwordhashing import hash_password
 from services.auth import get_current_active_user
 router = APIRouter()
@@ -46,9 +47,17 @@ def create_user(db: DbSession, user: UserCreate):
           raise HTTPException(status_code=400, detail=str(e))
      return new_user
 
-@router.get('/{user_id}', response_model=UserRead)
+@router.get('/{user_id}', response_model=UserDetails)
 def get_user(user_id: int, db: DbSession):
-     user = db.get(UserModel,user_id)
+     user = db.scalar(
+          select(UserModel)
+          .where(UserModel.id == user_id)
+          .options(
+               selectinload(UserModel.posts).selectinload(Post.category),
+               selectinload(UserModel.posts).selectinload(Post.tags),
+               selectinload(UserModel.comments),
+          )
+     )
      if not user:
           raise HTTPException(status_code=404, detail="User not found")
      return user

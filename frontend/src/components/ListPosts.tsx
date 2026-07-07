@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
-import type { Posts } from "../types/post";
+import type { PostRead } from "../types/post";
 
 type ListPostsProps = {
-  posts: Posts;
+  posts: PostRead[];
 };
 
 export default function ListPosts({ posts }: ListPostsProps) {
@@ -29,7 +29,7 @@ export default function ListPosts({ posts }: ListPostsProps) {
                     </Link>
                     <div>
                          <Link
-                              to={`/User/${post.id}`}
+                              to={`/users/${post.author.id}`}
                               className="mt-8 flex w-fit items-center gap-3 rounded-full pr-4 transition hover:bg-gray-50"
                          >
                               <p className="font-bold text-gray-900">{post.author.username}</p>

@@ -26,3 +26,14 @@ export async function createCategory(category: CategoryCreate): Promise<Category
 
      return response.json();
 }
+
+export async function deleteCategory(categoryId: number): Promise<void> {
+     const response = await fetch(`http://localhost:8000/api/categories/${categoryId}`, {
+          method: "DELETE",
+          credentials: "include",
+     });
+
+     if (!response.ok) {
+          console.log("Failed to delete category");
+     }
+}

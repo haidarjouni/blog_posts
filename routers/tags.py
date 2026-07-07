@@ -97,6 +97,7 @@ def delete_tag(tag_id: int, db: DbSession):
                detail="Tag not found"
           )
      try:
+          tag.posts.clear()
           db.delete(tag)
           db.commit()
      except Exception as e:

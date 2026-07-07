@@ -26,3 +26,15 @@ export async function createTag(tag: TagCreate): Promise<TagRead> {
 
      return response.json();
 }
+
+
+export async function deleteTag(tagId: number): Promise<void> {
+     const response = await fetch(`http://localhost:8000/api/tags/${tagId}`, {
+          method: "DELETE",
+          credentials: "include",
+     });
+
+     if (!response.ok) {
+          throw new Error("Failed to delete tag");
+     }
+}
