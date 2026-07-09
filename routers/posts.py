@@ -12,6 +12,7 @@ from schema.posts import PostCreate, PostRead, PostReadDetailed, PostUpdate
 from schema.comments import CommentCreate, CommentRead
 from models.comment import Comment
 from services.auth import get_current_active_user
+from services.permissions import require_auth_or_admin, require_admin, require_login
 router = APIRouter()
 
 DbSession = Annotated[Session, Depends(get_db)]
@@ -26,6 +27,7 @@ def get_posts(db: DbSession):
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=PostRead)
 def create_post(post: PostCreate, db: DbSession, current_user: Annotated[User, Depends(get_current_active_user)]):
+     require_admin(current_user)
      category = db.get(Category, post.category_id)
      
      if not category:
@@ -63,9 +65,8 @@ def update_post(post_id: int, post_update: PostUpdate, db: DbSession, current_us
      if not post:
           raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
      
-     if post.author_id != current_user.id:
-          raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to update this post")
-     
+     require_auth_or_admin(target_user_id=post.author_id, current_user=current_user)
+
      if post_update.title is not None:
           post.title = post_update.title
           post.slug = make_slug(post_update.title)
@@ -99,13 +100,9 @@ def update_post(post_id: int, post_update: PostUpdate, db: DbSession, current_us
 @router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(post_id: int, db: DbSession, current_user: Annotated[User, Depends(get_current_active_user)]):
      post = db.get(Post, post_id)
-     
      if not post:
           raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
-     
-     if post.author_id != current_user.id:
-          raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to delete this post")
-     
+     require_auth_or_admin(target_user_id=post.author_id, current_user=current_user)
      try:
           db.delete(post)
           db.commit()
@@ -124,12 +121,12 @@ def get_post(post_id: int, db: DbSession):
 
 @router.post("/{post_id}/comments", status_code=status.HTTP_201_CREATED, response_model=CommentRead)
 def create_comment(post_id: int, comment: CommentCreate, db: DbSession, current_user: Annotated[User, Depends(get_current_active_user)]):
-
+     
      post = db.get(Post, post_id)
      
      if not post:
           raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
-     
+     require_login(current_user)
      new_comment = Comment(
           content=comment.content,
           author_id=current_user.id,
@@ -150,10 +147,9 @@ def create_comment(post_id: int, comment: CommentCreate, db: DbSession, current_
 @router.patch("/comments/{comment_id}", response_model=CommentRead)
 def update_comment( comment_id: int, comment_update: CommentCreate, db: DbSession, current_user: Annotated[User, Depends(get_current_active_user)]):
      comment = db.get(Comment, comment_id)
-
-     if comment.author_id != current_user.id:
-          raise HTTPException(status_code=status.HTTP_404_FORBIDDEN, detail="You are not authorized to update this comment")
-     
+     if not comment:
+          raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Comment not found")
+     require_auth_or_admin(target_user_id=comment.author_id, current_user=current_user)
      if comment_update.content is not None:
           comment.content = comment_update.content
      
@@ -172,10 +168,7 @@ def delete_comment(comment_id: int, db: DbSession, current_user: Annotated[User,
      
      if not comment:
           raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Comment not found")
-     
-     if comment.author_id != current_user.id:
-          raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to delete this comment")
-     
+     require_auth_or_admin(target_user_id=comment.author_id, current_user=current_user)
      try:
           db.delete(comment)
           db.commit()

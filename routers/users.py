@@ -9,6 +9,7 @@ from models.user import User as UserModel
 from schema.users import UserDetails, UserRead, UserCreate, UserUpdate
 from services.passwordhashing import hash_password
 from services.auth import get_current_active_user
+from services.permissions import require_auth_or_admin
 router = APIRouter()
 
 DbSession = Annotated[Session, Depends(get_db)]
@@ -63,36 +64,35 @@ def get_user(user_id: int, db: DbSession):
      return user
 
 @router.patch('/{user_id}', response_model=UserRead)
-def update_user(user_id: int, user_update: UserUpdate, db: DbSession):
-     user = db.get(UserModel,user_id)
-     if not user:
+def update_user(current_user: Annotated[UserModel, Depends(get_current_active_user)], user_id: int, user_update: UserUpdate, db: DbSession):
+     existing_user = db.get(UserModel, user_id)
+     if not existing_user:
           raise HTTPException(status_code=404, detail="User not found")
-     
-     existing_user = db.scalar(select(UserModel).where(UserModel.username == user_update.username, UserModel.id != user_id))
-     if existing_user:
-          raise HTTPException(status_code=400, detail="Username already exists")
-     else:
-          user.username = user_update.username
-               
-     existing_user = db.scalar(select(UserModel).where(UserModel.email == user_update.email, UserModel.id != user_id))
-     if existing_user:
-          raise HTTPException(status_code=400, detail="Email already exists")
-     else:
-          user.email = user_update.email
+     require_auth_or_admin(target_user_id=user_id, current_user=current_user)
+     if user_update.username is not None:
+          if db.scalars(select(UserModel).where(UserModel.username == user_update.username, UserModel.id != user_id)).first():
+               raise HTTPException(status_code=400, detail="Username already exists")
+          existing_user.username = user_update.username
+     if user_update.email is not None:
+          if db.scalars(select(UserModel).where(UserModel.email == user_update.email, UserModel.id != user_id)).first():
+               raise HTTPException(status_code=400, detail="Email already exists")
+          existing_user.email = user_update.email
      try:
-          db.add(user)
           db.commit()
-          db.refresh(user)
+          db.refresh(existing_user)
      except Exception as e:
           db.rollback()
           raise HTTPException(status_code=400, detail=str(e))
-     return user
+     return existing_user
+          
+     
 
 @router.delete('/{user_id}', status_code=status.HTTP_200_OK)
-def delete_user(user_id: int, db: DbSession):
+def delete_user(user_id: int, current_user: Annotated[UserModel, Depends(get_current_active_user)], db: DbSession):
      user = db.get(UserModel,user_id)
      if not user:
           raise HTTPException(status_code=404, detail="User not found")
+     require_auth_or_admin(target_user_id=user_id, current_user=current_user)
      try:
           db.delete(user)
           db.commit()

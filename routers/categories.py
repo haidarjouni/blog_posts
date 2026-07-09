@@ -5,7 +5,10 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models.category import Category
+from models.user import User
 from schema.categories import CategoryCreate, CategoryRead, CategoryUpdate
+from services.auth import get_current_active_user
+from services.permissions import require_admin
 router = APIRouter()
 
 DbSession = Annotated[Session, Depends(get_db)]
@@ -16,11 +19,12 @@ def make_slug(name: str) -> str:
 
 @router.get('/', response_model=list[CategoryRead])
 def get_categories(db: DbSession):
-    return db.scalars(select(Category)).all()
+     return db.scalars(select(Category)).all()
 
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=CategoryRead)
-def create_category(category: CategoryCreate, db: DbSession):
+def create_category(category: CategoryCreate, db: DbSession, current_user: Annotated[User, Depends(get_current_active_user)]):
      # Prevent duplicate category names.
+     require_admin(current_user)
      check_duplicate = db.scalars(select(Category).where(Category.name == category.name)).first()
      if check_duplicate:
           raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Category name already exists')
@@ -43,33 +47,25 @@ def get_category(category_id: int, db: DbSession):
      return category
 
 @router.patch('/{category_id}', response_model=CategoryRead)
-def update_category(category_id: int, category: CategoryUpdate, db: DbSession):
-     
-     if category is None:
-          raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No data provided for update')
-     
-     if category.name is not None:
-          raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Category name cannot be updated')
-     
+def update_category(category_id: int, category: CategoryUpdate, db: DbSession, current_user: Annotated[User, Depends(get_current_active_user)]):
      existing_category = db.get(Category, category_id)
-     
      if not existing_category:
           raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Category not found')
-
-     # Check that another category does not already use this name.
-     duplicate_category = db.scalars(select(Category).where(Category.name == category.name, Category.id != category_id)).first()
-     
-     if duplicate_category:
-          raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Category name already exists')
-          
+     require_admin(current_user)  
+     if category.name is not None:
+          duplicate_category = db.scalars(
+               select(Category).where(
+                    Category.name == category.name,
+                    Category.id != category_id
+               )
+          ).first()
+          if duplicate_category:
+               raise HTTPException(status_code=400, detail="Category name already exists")
+          existing_category.name = category.name
+          existing_category.slug = make_slug(category.name)
      if category.description is not None:
           existing_category.description = category.description
-          
-     existing_category.name = category.name
-     existing_category.slug = make_slug(category.name)
-     
      try:
-          db.add(existing_category)
           db.commit()
           db.refresh(existing_category)
      except Exception as e:
@@ -78,10 +74,11 @@ def update_category(category_id: int, category: CategoryUpdate, db: DbSession):
      return existing_category
 
 @router.delete('/{category_id}', status_code=status.HTTP_204_NO_CONTENT)
-def delete_category(category_id: int, db: DbSession):
+def delete_category(category_id: int, db: DbSession, current_user: Annotated[User, Depends(get_current_active_user)]):
      existing_category = db.get(Category, category_id)
      if not existing_category:
           raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Category not found')
+     require_admin(current_user)
      try:
           db.delete(existing_category)
           db.commit()
