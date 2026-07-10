@@ -1,7 +1,46 @@
-import { Form, Link, useLoaderData } from "react-router-dom";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { Link, useActionData, useLoaderData, useNavigation, useSubmit } from "react-router-dom";
+import { postCreateSchema, type CreatePostFormInput, type CreatePostInput } from "../../schemas/postSchemas";
 import type { CreatePostLoaderData } from "./postsLoader";
+
+type PostActionData = {
+  error?: string;
+};
+
 function CreatePostPage() {
   const { categories, tags } = useLoaderData() as CreatePostLoaderData;
+  const actionData = useActionData() as PostActionData | undefined;
+  const navigation = useNavigation();
+  const submit = useSubmit();
+  const isSubmitting = navigation.state === "submitting";
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CreatePostFormInput, unknown, CreatePostInput>({
+    resolver: zodResolver(postCreateSchema),
+    defaultValues: {
+      title: "",
+      content: "",
+      category_id: 0,
+      status: "draft",
+      tags: [],
+    },
+  });
+
+  function onSubmit(formData: CreatePostInput) {
+    submit(
+      {
+        ...formData,
+        category_id: String(formData.category_id),
+        tags: formData.tags.map(String),
+      },
+      { method: "post" }
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-12 sm:py-16 lg:py-20">
       <header>
@@ -13,19 +52,31 @@ function CreatePostPage() {
         </p>
       </header>
 
-      <Form method="post" className="mt-10 space-y-8 border-t border-gray-200 pt-10">
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-10 space-y-8 border-t border-gray-200 pt-10" noValidate>
+        {actionData?.error && (
+          <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+            {actionData.error}
+          </div>
+        )}
+
         <div>
           <label htmlFor="title" className="block text-sm font-semibold text-gray-900">
             Title
           </label>
           <input
             id="title"
-            name="title"
             type="text"
-            required
             placeholder="Getting Started with FastAPI"
-            className="mt-2 block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
+            aria-invalid={Boolean(errors.title)}
+            aria-describedby={errors.title ? "title-error" : undefined}
+            {...register("title")}
+            className="mt-2 block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 aria-invalid:outline-red-500"
           />
+          {errors.title?.message && (
+            <p id="title-error" className="mt-2 text-sm font-semibold text-red-600">
+              {errors.title.message}
+            </p>
+          )}
         </div>
 
         <div>
@@ -34,12 +85,18 @@ function CreatePostPage() {
           </label>
           <textarea
             id="content"
-            name="content"
-            required
             rows={10}
             placeholder="Write the post content..."
-            className="mt-2 block w-full resize-y rounded-md bg-white px-3 py-2 text-base leading-7 text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
+            aria-invalid={Boolean(errors.content)}
+            aria-describedby={errors.content ? "content-error" : undefined}
+            {...register("content")}
+            className="mt-2 block w-full resize-y rounded-md bg-white px-3 py-2 text-base leading-7 text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 aria-invalid:outline-red-500"
           />
+          {errors.content?.message && (
+            <p id="content-error" className="mt-2 text-sm font-semibold text-red-600">
+              {errors.content.message}
+            </p>
+          )}
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2">
@@ -49,10 +106,11 @@ function CreatePostPage() {
             </label>
             <select
               id="category_id"
-              name="category_id"
-              required
               defaultValue=""
-              className="mt-2 block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
+              aria-invalid={Boolean(errors.category_id)}
+              aria-describedby={errors.category_id ? "category-error" : undefined}
+              {...register("category_id")}
+              className="mt-2 block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 aria-invalid:outline-red-500"
             >
               <option value="" disabled>
                 Select category
@@ -63,6 +121,11 @@ function CreatePostPage() {
                 </option>
               ))}
             </select>
+            {errors.category_id?.message && (
+              <p id="category-error" className="mt-2 text-sm font-semibold text-red-600">
+                {errors.category_id.message}
+              </p>
+            )}
           </div>
 
           <div>
@@ -71,8 +134,7 @@ function CreatePostPage() {
             </label>
             <select
               id="status"
-              name="status"
-              defaultValue="draft"
+              {...register("status")}
               className="mt-2 block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
             >
               <option value="draft">Draft</option>
@@ -91,14 +153,19 @@ function CreatePostPage() {
               >
                 <input
                   type="checkbox"
-                  name="tags"
                   value={tag.id}
+                  {...register("tags")}
                   className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
                 />
                 {tag.name}
               </label>
             ))}
           </div>
+          {errors.tags?.message && (
+            <p className="mt-2 text-sm font-semibold text-red-600">
+              {errors.tags.message}
+            </p>
+          )}
         </fieldset>
 
         <div className="flex flex-col-reverse gap-3 border-t border-gray-200 pt-8 sm:flex-row sm:justify-end">
@@ -110,12 +177,13 @@ function CreatePostPage() {
           </Link>
           <button
             type="submit"
-            className="inline-flex h-11 items-center justify-center rounded-md bg-indigo-600 px-5 text-sm font-semibold text-white shadow-xs transition hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            disabled={isSubmitting}
+            className="inline-flex h-11 items-center justify-center rounded-md bg-indigo-600 px-5 text-sm font-semibold text-white shadow-xs transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-indigo-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           >
-            Create post
+            {isSubmitting ? "Creating..." : "Create post"}
           </button>
         </div>
-      </Form>
+      </form>
     </div>
   );
 }

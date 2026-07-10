@@ -11,7 +11,6 @@ class TagRead(BaseModel):
     id: int = Field(gt=0)
     name: str
     slug: str
-
     model_config = ConfigDict(from_attributes=True)
 
 class TagCreate(BaseModel):

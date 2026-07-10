@@ -38,37 +38,37 @@ function UserPage() {
                 )}
                 {canManageUser && (
                   <div className="relative">
-                        <button
-                          type="button"
-                          aria-label="User actions"
-                          onClick={() =>
-                            setOpenEditPanel(!openEditPanel)
-                          }
-                          className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
-                        >
-                          <span className="text-xl leading-none">...</span>
-                        </button>
+                    <button
+                      type="button"
+                      aria-label="User actions"
+                      onClick={() =>
+                        setOpenEditPanel(!openEditPanel)
+                      }
+                      className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+                    >
+                      <span className="text-xl leading-none">...</span>
+                    </button>
 
-                        {openEditPanel && (
-                          <div className="absolute right-0 top-10 z-10 w-36 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
-                            <Link to ={`/users/${user.id}/edit`}
-                              className="block w-full px-4 py-2 text-left text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                            >
-                              Edit
-                            </Link>
-                            <Form method="delete">
-                              <input type="hidden" name="intent"  value="delete-user" />
-                              <input type="hidden" name="userId" value={user.id} />
-                              <button
-                                type="submit"
-                                className="block w-full px-4 py-2 text-left text-sm font-semibold text-red-600 hover:bg-red-50"
-                              >
-                                Delete
-                              </button>
-                            </Form>
-                          </div>
-                        )}
+                    {openEditPanel && (
+                      <div className="absolute right-0 top-10 z-10 w-36 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+                        <Link to ={`/users/${user.id}/edit`}
+                          className="block w-full px-4 py-2 text-left text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                        >
+                          Edit
+                        </Link>
+                        <Form method="delete">
+                          <input type="hidden" name="intent"  value="delete-user" />
+                          <input type="hidden" name="userId" value={user.id} />
+                          <button
+                            type="submit"
+                            className="block w-full px-4 py-2 text-left text-sm font-semibold text-red-600 hover:bg-red-50"
+                          >
+                            Delete
+                          </button>
+                        </Form>
                       </div>
+                    )}
+                  </div>
                 )}
               </div>
               <p className="mt-2 text-base font-semibold text-gray-400">

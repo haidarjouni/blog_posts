@@ -1,12 +1,160 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
-import { Form, Link, useLoaderData, useNavigation, useOutletContext } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { Form, Link, useActionData, useLoaderData, useNavigation, useOutletContext, useSubmit } from "react-router-dom";
 import type { PostDetailLoaderData } from "./postsLoader";
+import { commentCreateSchema, type CreateCommentInput } from "../../schemas/commentSchemas";
+import type { CommentRead } from "../../types/comment";
 import type { UserRead } from "../../types/user";
+
+type CommentActionData = {
+  error?: string;
+  intent?: "create-comment" | "update-comment";
+  commentId?: number;
+};
+
+type CreateCommentFormProps = {
+  actionData?: CommentActionData;
+  isSubmitting: boolean;
+};
+
+function CreateCommentForm({ actionData, isSubmitting }: CreateCommentFormProps) {
+  const submit = useSubmit();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CreateCommentInput>({
+    resolver: zodResolver(commentCreateSchema),
+    defaultValues: {
+      content: "",
+    },
+  });
+
+  function onSubmit(formData: CreateCommentInput) {
+    submit({ ...formData, intent: "create-comment" }, { method: "post" });
+  }
+
+  const backendError = actionData?.intent === "create-comment" ? actionData.error : undefined;
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="mt-8" noValidate>
+      {backendError && (
+        <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+          {backendError}
+        </div>
+      )}
+      <label htmlFor="content" className="block text-sm font-semibold text-gray-900">
+        Add a comment
+      </label>
+      <textarea
+        id="content"
+        rows={4}
+        placeholder="Share your thoughts..."
+        aria-invalid={Boolean(errors.content)}
+        aria-describedby={errors.content ? "comment-content-error" : undefined}
+        {...register("content")}
+        className="mt-2 block w-full resize-y rounded-md bg-white px-3 py-2 text-base leading-7 text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 aria-invalid:outline-red-500"
+      />
+      {errors.content?.message && (
+        <p id="comment-content-error" className="mt-2 text-sm font-semibold text-red-600">
+          {errors.content.message}
+        </p>
+      )}
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="mt-4 inline-flex h-11 items-center justify-center rounded-md bg-indigo-600 px-5 text-sm font-semibold text-white shadow-xs transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-indigo-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+      >
+        {isSubmitting ? "Posting..." : "Post comment"}
+      </button>
+    </form>
+  );
+}
+
+type EditCommentFormProps = {
+  comment: CommentRead;
+  actionData?: CommentActionData;
+  isSubmitting: boolean;
+  onCancel: () => void;
+};
+
+function EditCommentForm({ comment, actionData, isSubmitting, onCancel }: EditCommentFormProps) {
+  const submit = useSubmit();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CreateCommentInput>({
+    resolver: zodResolver(commentCreateSchema),
+    defaultValues: {
+      content: comment.content,
+    },
+  });
+
+  function onSubmit(formData: CreateCommentInput) {
+    submit(
+      {
+        ...formData,
+        comment_id: String(comment.id),
+        intent: "update-comment",
+      },
+      { method: "post" }
+    );
+  }
+
+  const backendError =
+    actionData?.intent === "update-comment" && actionData.commentId === comment.id
+      ? actionData.error
+      : undefined;
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-3" noValidate>
+      {backendError && (
+        <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+          {backendError}
+        </div>
+      )}
+      <textarea
+        rows={4}
+        aria-invalid={Boolean(errors.content)}
+        aria-describedby={errors.content ? `comment-${comment.id}-content-error` : undefined}
+        {...register("content")}
+        className="block w-full resize-y rounded-md bg-white px-3 py-2 text-base leading-7 text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 aria-invalid:outline-red-500"
+      />
+      {errors.content?.message && (
+        <p id={`comment-${comment.id}-content-error`} className="text-sm font-semibold text-red-600">
+          {errors.content.message}
+        </p>
+      )}
+      <div className="flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="inline-flex h-10 items-center justify-center rounded-md border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="inline-flex h-10 items-center justify-center rounded-md bg-indigo-600 px-4 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-indigo-300"
+        >
+          {isSubmitting ? "Saving..." : "Save"}
+        </button>
+      </div>
+    </form>
+  );
+}
+
 function PostPage() {
   const { post } = useLoaderData() as PostDetailLoaderData;
+  const actionData = useActionData() as CommentActionData | undefined;
   const navigation = useNavigation();
   const [openCommentMenuId, setOpenCommentMenuId] = useState<number | null>(null);
-  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(
+    actionData?.intent === "update-comment" ? actionData.commentId || null : null
+  );
   const [openPostMenuId, setOpenPostMenuId] = useState<boolean>(false);
   const isSubmitting = navigation.state === "submitting";
   const paragraphs = post.content.split("\n").filter(Boolean);
@@ -115,27 +263,7 @@ function PostPage() {
           </div>
         </div>
 
-        <Form method="post" className="mt-8">
-          <input type="hidden" name="intent" value="create-comment" />
-          <label htmlFor="content" className="block text-sm font-semibold text-gray-900">
-            Add a comment
-          </label>
-          <textarea
-            id="content"
-            name="content"
-            required
-            rows={4}
-            placeholder="Share your thoughts..."
-            className="mt-2 block w-full resize-y rounded-md bg-white px-3 py-2 text-base leading-7 text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
-          />
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="mt-4 inline-flex h-11 items-center justify-center rounded-md bg-indigo-600 px-5 text-sm font-semibold text-white shadow-xs transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-indigo-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-          >
-            {isSubmitting ? "Posting..." : "Post comment"}
-          </button>
-        </Form>
+        <CreateCommentForm actionData={actionData} isSubmitting={isSubmitting} />
 
         <div className="mt-10 space-y-4">
           {post.comments.length === 0 ? (
@@ -200,33 +328,12 @@ function PostPage() {
                 </div>
 
                 {editingCommentId === comment.id ? (
-                  <Form method="patch" className="mt-4 space-y-3">
-                    <input type="hidden" name="intent" value="update-comment" />
-                    <input type="hidden" name="comment_id" value={comment.id} />
-                    <textarea
-                      name="content"
-                      required
-                      rows={4}
-                      defaultValue={comment.content}
-                      className="block w-full resize-y rounded-md bg-white px-3 py-2 text-base leading-7 text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
-                    />
-                    <div className="flex justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setEditingCommentId(null)}
-                        className="inline-flex h-10 items-center justify-center rounded-md border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="inline-flex h-10 items-center justify-center rounded-md bg-indigo-600 px-4 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-indigo-300"
-                      >
-                        {isSubmitting ? "Saving..." : "Save"}
-                      </button>
-                    </div>
-                  </Form>
+                  <EditCommentForm
+                    comment={comment}
+                    actionData={actionData}
+                    isSubmitting={isSubmitting}
+                    onCancel={() => setEditingCommentId(null)}
+                  />
                 ) : (
                   <p className="mt-4 text-base leading-7 text-gray-700">
                     {comment.content}

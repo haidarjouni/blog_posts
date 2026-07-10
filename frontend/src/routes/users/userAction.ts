@@ -1,7 +1,7 @@
-import { data, redirect } from 'react-router-dom';
+import { data, isRouteErrorResponse, redirect } from 'react-router-dom';
 import {deleteUser, updateUser} from '../../api/users';
 import type { UserUpdate } from '../../types/user';
-export async function userAction({ request, params }: { request: Request, params: { id?: string } }): Promise<Response> {
+export async function userAction({ request, params }: { request: Request, params: { id?: string } }) {
      const formData = await request.formData();
      const intent = String(formData.get("intent") || "");
      switch (intent) {
@@ -12,7 +12,16 @@ export async function userAction({ request, params }: { request: Request, params
                }
                const username = String(formData.get("username") || "");
                const email = String(formData.get("email") || "");
-               await updateUserAction({ username, email }, userId);
+               try {
+                    await updateUserAction({ username, email }, userId);
+               } catch (error) {
+                    if (isRouteErrorResponse(error) && error.status === 400) {
+                         const message = typeof error.data === "string" ? error.data : "Failed to update user";
+                         return data({ error: message }, { status: 400 });
+                    }
+
+                    throw error;
+               }
                return redirect(`/users/${userId}`);
           case "delete-user":
                const deleteUserId = Number(formData.get("userId") || null);

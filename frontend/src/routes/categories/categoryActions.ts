@@ -1,4 +1,4 @@
-import { data, redirect } from "react-router-dom";
+import { data, isRouteErrorResponse, redirect } from "react-router-dom";
 import { createCategory, deleteCategory, updateCategory } from "../../api/categories";
 
 export async function createCategoryAction({ request }: { request: Request }) {
@@ -7,11 +7,24 @@ export async function createCategoryAction({ request }: { request: Request }) {
           case "create-category":
                const name = String(formData.get("name") || "");
                const description = String(formData.get("description") || "");
-               await createCategory({
-                    name,
-                    description: description || undefined,
-               });
-               break;
+               try {
+                    await createCategory({
+                         name,
+                         description: description || undefined,
+                    });
+               } catch (error) {
+                    if (isRouteErrorResponse(error) && error.status === 400) {
+                         return data(
+                              {
+                                   error: typeof error.data === "string" ? error.data : "Failed to create category",
+                                   intent: "create-category",
+                              },
+                              { status: 400 }
+                         );
+                    }
+                    throw error;
+               }
+               return redirect("/create-category");
           case "delete-category":
                const categoryId = Number(formData.get("categoryId") || null);
                if (!categoryId) {
@@ -26,14 +39,27 @@ export async function createCategoryAction({ request }: { request: Request }) {
                }
                const updatedName = String(formData.get("name") || "");
                const updatedDescription = String(formData.get("description") || "");
-               await updateCategory(updateCategoryId, {
-                    name: updatedName,
-                    description: updatedDescription || undefined,
-               });
+               try {
+                    await updateCategory(updateCategoryId, {
+                         name: updatedName,
+                         description: updatedDescription || undefined,
+                    });
+               } catch (error) {
+                    if (isRouteErrorResponse(error) && error.status === 400) {
+                         return data(
+                              {
+                                   error: typeof error.data === "string" ? error.data : "Failed to update category",
+                                   intent: "update-category",
+                                   categoryId: updateCategoryId,
+                              },
+                              { status: 400 }
+                         );
+                    }
+                    throw error;
+               }
                return redirect("/create-category");
           default:
                throw data("Unknown category action", { status: 400 });
           
      }
-     return redirect("/create-category");
 }
