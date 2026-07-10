@@ -6,6 +6,7 @@ function PostPage() {
   const { post } = useLoaderData() as PostDetailLoaderData;
   const navigation = useNavigation();
   const [openCommentMenuId, setOpenCommentMenuId] = useState<number | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [openPostMenuId, setOpenPostMenuId] = useState<boolean>(false);
   const isSubmitting = navigation.state === "submitting";
   const paragraphs = post.content.split("\n").filter(Boolean);
@@ -32,7 +33,7 @@ function PostPage() {
               {post.status}
             </span>
           </div>
-          {user?.id === post.author.id && (
+          {(user?.id === post.author.id || user?.is_admin) && (
             <>
               <div className="relative">
                 <button
@@ -43,12 +44,12 @@ function PostPage() {
                   </button>
                     {openPostMenuId === true && (
                       <div className="absolute right-0 top-10 z-10 w-36 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
-                        <button
-                          type="button"
+                        <Link
+                          to={`/posts/${post.id}/edit`}
                           className="block w-full px-4 py-2 text-left text-sm font-semibold text-gray-700 hover:bg-gray-50"
                         >
                           Edit
-                        </button>
+                        </Link>
                         <Form method="delete" >
                           <input type="hidden" name="post_id" value={post.id} />
                           <input type="hidden" name="intent" value="delete-post" />
@@ -161,7 +162,7 @@ function PostPage() {
                       </time>
                     </div>
                   </div>
-                  {user?.id === comment.author.id && (
+                  {(user?.id === comment.author.id || user?.is_admin) && (
                     <div className="relative">
                       <button
                         type="button" aria-label="Comment actions"
@@ -174,6 +175,10 @@ function PostPage() {
                         <div className="absolute right-0 top-10 z-10 w-36 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
                           <button
                             type="button"
+                            onClick={() => {
+                              setEditingCommentId(comment.id);
+                              setOpenCommentMenuId(null);
+                            }}
                             className="block w-full px-4 py-2 text-left text-sm font-semibold text-gray-700 hover:bg-gray-50"
                           >
                             Edit
@@ -194,9 +199,39 @@ function PostPage() {
                   )}
                 </div>
 
-                <p className="mt-4 text-base leading-7 text-gray-700">
-                  {comment.content}
-                </p>
+                {editingCommentId === comment.id ? (
+                  <Form method="patch" className="mt-4 space-y-3">
+                    <input type="hidden" name="intent" value="update-comment" />
+                    <input type="hidden" name="comment_id" value={comment.id} />
+                    <textarea
+                      name="content"
+                      required
+                      rows={4}
+                      defaultValue={comment.content}
+                      className="block w-full resize-y rounded-md bg-white px-3 py-2 text-base leading-7 text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditingCommentId(null)}
+                        className="inline-flex h-10 items-center justify-center rounded-md border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="inline-flex h-10 items-center justify-center rounded-md bg-indigo-600 px-4 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-indigo-300"
+                      >
+                        {isSubmitting ? "Saving..." : "Save"}
+                      </button>
+                    </div>
+                  </Form>
+                ) : (
+                  <p className="mt-4 text-base leading-7 text-gray-700">
+                    {comment.content}
+                  </p>
+                )}
               </article>
             ))
           )}

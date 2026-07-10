@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from typing import Annotated
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
@@ -87,16 +87,29 @@ def update_user(current_user: Annotated[UserModel, Depends(get_current_active_us
           
      
 
-@router.delete('/{user_id}', status_code=status.HTTP_200_OK)
-def delete_user(user_id: int, current_user: Annotated[UserModel, Depends(get_current_active_user)], db: DbSession):
-     user = db.get(UserModel,user_id)
+@router.delete('/{user_id}', status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(user_id: int, response: Response, current_user: Annotated[UserModel, Depends(get_current_active_user)], db: DbSession):
+     user = db.scalar(
+          select(UserModel)
+          .where(UserModel.id == user_id)
+          .options(
+               selectinload(UserModel.posts).selectinload(Post.tags),
+               selectinload(UserModel.comments),
+               selectinload(UserModel.refresh_tokens),
+          )
+     )
      if not user:
           raise HTTPException(status_code=404, detail="User not found")
      require_auth_or_admin(target_user_id=user_id, current_user=current_user)
      try:
+          for post in user.posts:
+               post.tags.clear()
           db.delete(user)
           db.commit()
      except Exception as e:
           db.rollback()
           raise HTTPException(status_code=400, detail=str(e))
+     if current_user.id == user_id:
+          response.delete_cookie(key="access_token")
+          response.delete_cookie(key="refresh_token")
      return

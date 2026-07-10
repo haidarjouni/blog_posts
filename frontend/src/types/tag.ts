@@ -7,3 +7,5 @@ export type TagRead = {
 export type TagCreate = {
      name: string;
 }
+
+export type TagUpdate = Partial<TagCreate>;

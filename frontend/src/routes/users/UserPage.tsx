@@ -1,5 +1,6 @@
-import { Link, useLoaderData } from "react-router-dom";
-import type { UserDetail } from "../../types/user";
+import { Form, Link, useLoaderData, useOutletContext } from "react-router-dom";
+import type { UserDetail, UserRead } from "../../types/user";
+import { useState } from "react";
 
 type UserPageProps = {
   user: UserDetail;
@@ -7,6 +8,9 @@ type UserPageProps = {
 
 function UserPage() {
   const { user } = useLoaderData() as UserPageProps;
+  const { user: currentUser } = useOutletContext<{ user: UserRead | null }>();
+  const [openEditPanel, setOpenEditPanel] = useState<boolean>(false);
+  const canManageUser = currentUser?.id === user.id || currentUser?.is_admin;
   return (
     <div className="mx-auto w-full max-w-5xl px-6 py-12 sm:py-16 lg:py-20">
       <Link
@@ -31,6 +35,40 @@ function UserPage() {
                   <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                     Admin
                   </span>
+                )}
+                {canManageUser && (
+                  <div className="relative">
+                        <button
+                          type="button"
+                          aria-label="User actions"
+                          onClick={() =>
+                            setOpenEditPanel(!openEditPanel)
+                          }
+                          className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+                        >
+                          <span className="text-xl leading-none">...</span>
+                        </button>
+
+                        {openEditPanel && (
+                          <div className="absolute right-0 top-10 z-10 w-36 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+                            <Link to ={`/users/${user.id}/edit`}
+                              className="block w-full px-4 py-2 text-left text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                            >
+                              Edit
+                            </Link>
+                            <Form method="delete">
+                              <input type="hidden" name="intent"  value="delete-user" />
+                              <input type="hidden" name="userId" value={user.id} />
+                              <button
+                                type="submit"
+                                className="block w-full px-4 py-2 text-left text-sm font-semibold text-red-600 hover:bg-red-50"
+                              >
+                                Delete
+                              </button>
+                            </Form>
+                          </div>
+                        )}
+                      </div>
                 )}
               </div>
               <p className="mt-2 text-base font-semibold text-gray-400">

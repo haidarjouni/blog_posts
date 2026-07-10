@@ -9,3 +9,5 @@ export type CommentRead = {
 export type CommentCreate = {
      content: string;
 }
+
+export type CommentUpdate = Partial<CommentCreate>;

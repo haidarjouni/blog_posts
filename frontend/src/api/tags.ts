@@ -1,4 +1,4 @@
-import type {TagCreate, TagRead} from "../types/tag";
+import type {TagCreate, TagRead, TagUpdate} from "../types/tag";
 
 // Read all tags for checkbox lists and admin tag screens.
 export async function getTags(): Promise<TagRead[]> {
@@ -37,4 +37,21 @@ export async function deleteTag(tagId: number): Promise<void> {
      if (!response.ok) {
           throw new Error("Failed to delete tag");
      }
+}
+
+export async function updateTag(tagId: number, tag: TagUpdate): Promise<TagRead> {
+     const response = await fetch(`http://localhost:8000/api/tags/${tagId}`, {
+          method: "PATCH",
+          credentials: "include",
+          headers: {
+               "Content-Type": "application/json",
+          },
+          body: JSON.stringify(tag),
+     });
+
+     if (!response.ok) {
+          throw new Error("Failed to update tag");
+     }
+
+     return response.json();
 }

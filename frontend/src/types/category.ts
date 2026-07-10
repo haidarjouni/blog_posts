@@ -9,3 +9,5 @@ export type CategoryCreate = {
      name: string;
      description?: string;
 }
+
+export type CategoryUpdate = Partial<CategoryCreate>;

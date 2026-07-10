@@ -17,3 +17,5 @@ export type UserDetail = UserRead & {
      posts: PostRead[];
      comments: CommentRead[];
 }
+
+export type UserUpdate = Partial<Pick<UserCreate, "username" | "email">>

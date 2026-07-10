@@ -1,5 +1,5 @@
 import { redirect } from "react-router-dom";
-import { createComment, createPost, deleteComment, deletePost } from "../../api/posts";
+import { createComment, createPost, deleteComment, deletePost, updateComment, updatePost } from "../../api/posts";
 export async function createPostsAction({ request }: { request: Request }): Promise<Response> {
      const formData = await request.formData();
      const title = formData.get("title") as string;
@@ -15,6 +15,29 @@ export async function createPostsAction({ request }: { request: Request }): Prom
           tags: tags.map((tag) => Number(tag)),
      });
      return redirect(`/posts/${post.id}`)
+}
+
+export async function updatePostAction({ request, params }: { request: Request; params: { id?: string } }): Promise<Response> {
+     if(!params.id){
+          throw new Error("Post ID is required");
+     }
+
+     const formData = await request.formData();
+     const title = String(formData.get("title") || "");
+     const content = String(formData.get("content") || "");
+     const categoryId = Number(formData.get("category_id") || 0);
+     const status = String(formData.get("status") || "");
+     const tags = formData.getAll("tags").map((tag) => Number(tag));
+
+     const post = await updatePost(Number(params.id), {
+          title,
+          content,
+          category_id: categoryId,
+          status,
+          tags,
+     });
+
+     return redirect(`/posts/${post.id}`);
 }
 
 export async function createCommentAction({request,params}: {request: Request; params: { id?: string };}): Promise<Response> {
@@ -35,6 +58,16 @@ export async function createCommentAction({request,params}: {request: Request; p
                     throw new Error("Comment ID is required");
                }
                await deleteComment(Number(commentId));
+               return redirect(`/posts/${params.id}`);
+          case "update-comment":
+               const editedCommentId = String(formData.get("comment_id")|| "");
+               const editedContent = String(formData.get("content")|| "");
+               if(!editedCommentId){
+                    throw new Error("Comment ID is required");
+               }
+               await updateComment(Number(editedCommentId), {
+                    content: editedContent,
+               });
                return redirect(`/posts/${params.id}`);
           case "delete-post":
                const postId = String(formData.get("post_id")|| "");

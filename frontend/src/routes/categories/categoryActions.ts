@@ -1,6 +1,5 @@
 import { redirect } from "react-router-dom";
-import { createCategory } from "../../api/categories";
-import { deleteCategory } from "../../api/categories";
+import { createCategory, deleteCategory, updateCategory } from "../../api/categories";
 export async function createCategoryAction({ request }: { request: Request }) {
      const formData = await request.formData();
      switch(String(formData.get("intent") || "")){
@@ -16,6 +15,20 @@ export async function createCategoryAction({ request }: { request: Request }) {
                const categoryId = Number(formData.get("categoryId") || null);
                if (categoryId) {
                     await deleteCategory(categoryId);
+                    return redirect("/create-category");
+               }
+               break;
+          case "update-category":
+               // checks the case
+               const updateCategoryId = Number(formData.get("categoryId") || null);
+               const updatedName = String(formData.get("name") || "");
+               const updatedDescription = String(formData.get("description") || "");
+               // gets the info
+               if (updateCategoryId) { // if exists sends teh patch update 
+                    await updateCategory(updateCategoryId, {
+                         name: updatedName,
+                         description: updatedDescription || undefined, // undefined if empty
+                    });
                     return redirect("/create-category");
                }
                break;

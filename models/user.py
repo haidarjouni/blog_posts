@@ -23,6 +23,6 @@ class User(Base):
      created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
      updated_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), nullable=False,server_default=func.now(), onupdate=func.now())
      
-     posts: Mapped[List["Post"]] = relationship("Post", back_populates="author")
+     posts: Mapped[List["Post"]] = relationship("Post", back_populates="author", cascade="all, delete-orphan")
      comments: Mapped[List["Comment"]] = relationship("Comment", back_populates="author", cascade="all, delete-orphan")
      refresh_tokens: Mapped[List["RefreshToken"]] = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")

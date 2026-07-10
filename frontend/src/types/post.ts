@@ -27,3 +27,5 @@ export type PostCreate = {
   status: string;
   tags: number[];
 };
+
+export type PostUpdate = Partial<PostCreate>;
