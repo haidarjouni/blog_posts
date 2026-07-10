@@ -1,4 +1,5 @@
 import type { UserRead } from "../types/user";
+import { throwApiError } from "./apiError";
 
 type LoginRequest = {
      username: string;
@@ -20,7 +21,7 @@ export async function loginUser(request: LoginRequest): Promise<void> {
      });
 
      if (!response.ok) {
-          throw new Error("Failed to login");
+          await throwApiError(response, "Failed to login");
      }
 }
 
@@ -52,7 +53,7 @@ export async function getCurrentUser() : Promise<UserRead | null> {
      }
 
      if (!response.ok) {
-          throw new Error("Failed to fetch current user");
+          await throwApiError(response, "Failed to fetch current user");
      }
      return await response.json();
 }
@@ -71,7 +72,7 @@ export async function logout(): Promise<void> {
           credentials: "include",
      });
      if (!response.ok) {
-          throw new Error("Failed to logout");
+          await throwApiError(response, "Failed to logout");
      }
      return;
 }

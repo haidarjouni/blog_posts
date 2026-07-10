@@ -1,5 +1,6 @@
-import { redirect } from "react-router-dom";
+import { data, redirect } from "react-router-dom";
 import { createCategory, deleteCategory, updateCategory } from "../../api/categories";
+
 export async function createCategoryAction({ request }: { request: Request }) {
      const formData = await request.formData();
      switch(String(formData.get("intent") || "")){
@@ -13,27 +14,25 @@ export async function createCategoryAction({ request }: { request: Request }) {
                break;
           case "delete-category":
                const categoryId = Number(formData.get("categoryId") || null);
-               if (categoryId) {
-                    await deleteCategory(categoryId);
-                    return redirect("/create-category");
+               if (!categoryId) {
+                    throw data("Category ID is required for deletion", { status: 400 });
                }
-               break;
+               await deleteCategory(categoryId);
+               return redirect("/create-category");
           case "update-category":
-               // checks the case
                const updateCategoryId = Number(formData.get("categoryId") || null);
+               if(!updateCategoryId) {
+                    throw data("Category ID is required for update", { status: 400 });
+               }
                const updatedName = String(formData.get("name") || "");
                const updatedDescription = String(formData.get("description") || "");
-               // gets the info
-               if (updateCategoryId) { // if exists sends teh patch update 
-                    await updateCategory(updateCategoryId, {
-                         name: updatedName,
-                         description: updatedDescription || undefined, // undefined if empty
-                    });
-                    return redirect("/create-category");
-               }
-               break;
+               await updateCategory(updateCategoryId, {
+                    name: updatedName,
+                    description: updatedDescription || undefined,
+               });
+               return redirect("/create-category");
           default:
-               throw new Error("Unknown intent");
+               throw data("Unknown category action", { status: 400 });
           
      }
      return redirect("/create-category");

@@ -1,3 +1,4 @@
+import { data } from "react-router-dom";
 import { getCategories } from "../../api/categories";
 import { getPostById } from "../../api/posts";
 import { getTags } from "../../api/tags";
@@ -18,6 +19,7 @@ export type EditPostLoaderData = {
      tags: TagRead[];
 }
 export async function createPostLoader(): Promise<CreatePostLoaderData > {
+     await requireUser();
      const categories = await getCategories();
      const tags = await getTags();
      return {
@@ -28,24 +30,32 @@ export async function createPostLoader(): Promise<CreatePostLoaderData > {
 
 export async function getPostByIdLoader({ params }: { params: { id?: string } }): Promise<PostDetailLoaderData> {
      if(!params.id){
-          throw new Error("Post ID is required");
+          throw data("Post ID is required", { status: 400 });
+     }
+     const postId = Number(params.id);
+     if(Number.isNaN(postId)){
+          throw data("Post ID must be a number", { status: 400 });
      }
 
-     const post = await getPostById(Number(params.id));
+     const post = await getPostById(postId);
      
      return { post };
 }
 
 export async function editPostLoader({ params }: { params: { id?: string } }): Promise<EditPostLoaderData> {
      if(!params.id){
-          throw new Error("Post ID is required");
+          throw data("Post ID is required", { status: 400 });
+     }
+     const postId = Number(params.id);
+     if(Number.isNaN(postId)){
+          throw data("Post ID must be a number", { status: 400 });
      }
 
      const user = await requireUser();
-     const post = await getPostById(Number(params.id));
+     const post = await getPostById(postId);
 
      if(user.id !== post.author.id && !user.is_admin){
-          throw new Error("You are not authorized to edit this post");
+          throw data("You are not authorized to edit this post", { status: 403 });
      }
 
      const categories = await getCategories();

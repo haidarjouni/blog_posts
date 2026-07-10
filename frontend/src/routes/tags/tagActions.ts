@@ -1,4 +1,4 @@
-import { redirect } from "react-router-dom";
+import { data, redirect } from "react-router-dom";
 import { createTag, deleteTag, updateTag } from "../../api/tags";
 
 export async function createTagAction({ request }: { request: Request }) {
@@ -12,19 +12,21 @@ export async function createTagAction({ request }: { request: Request }) {
                return redirect("/create-tag");
           case "delete-tag":
                const tagId = Number(formData.get("tagId") || 0);
-               
+               if (!tagId) {
+                    throw data("Tag ID is required for deletion", { status: 400 });
+               }
                await deleteTag(tagId);
                
                return redirect("/create-tag");
           case "update-tag": 
-               // checks the case
                const updateTagId = Number(formData.get("tagId") || 0);
+               if (!updateTagId) {
+                    throw data("Tag ID is required for update", { status: 400 });
+               }
                const updatedName = String(formData.get("name") || "");
-               //gets the info 
                await updateTag(updateTagId, { name: updatedName });
-               // updates the tag
                return redirect("/create-tag");
           default:
-               throw new Error("Unknown intent");
+               throw data("Unknown tag action", { status: 400 });
      }
 }

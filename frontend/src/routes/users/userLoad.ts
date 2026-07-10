@@ -1,3 +1,4 @@
+import { data } from "react-router-dom";
 import { getUserById } from "../../api/users";
 import { requireUser } from "../../auth/guards";
 import type { UserDetail } from "../../types/user";
@@ -9,26 +10,28 @@ export type UserLoaderData = {
 };
 export async function userLoaderWithPosts({ params }: { params: { id?: string } }): Promise<UserLoaderWithPostsData> {
      if (!params.id) {
-          throw new Error("User ID is required");
+          throw data("User ID is required", { status: 400 });
      }
-     const user = await getUserById(Number(params.id));
-     if(!user) {
-          throw new Error("User not found");
+     const userId = Number(params.id);
+     if(Number.isNaN(userId)) {
+          throw data("User ID must be a number", { status: 400 });
      }
+     const user = await getUserById(userId);
      return { user };
 }
 
 export async function userLoader({ params }: { params: { id?: string } }): Promise<UserLoaderData> {
      if (!params.id) {
-          throw new Error("User ID is required");
+          throw data("User ID is required", { status: 400 });
+     }
+     const userId = Number(params.id);
+     if(Number.isNaN(userId)) {
+          throw data("User ID must be a number", { status: 400 });
      }
      const currentUser = await requireUser();
-     const user = await getUserById(Number(params.id));
-     if(!user) {
-          throw new Error("User not found");
-     }
+     const user = await getUserById(userId);
      if(currentUser.id !== user.id && !currentUser.is_admin) {
-          throw new Error("You are not authorized to edit this user");
+          throw data("You are not authorized to edit this user", { status: 403 });
      }
      return { user };
 }

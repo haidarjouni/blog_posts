@@ -23,11 +23,14 @@ import { createTagAction } from './routes/tags/tagActions';
 import { createTagLoader } from './routes/tags/tagLoaders';
 import { userLoaderWithPosts, userLoader } from './routes/users/userLoad';
 import { userAction } from './routes/users/userAction';
+import RootErrorBoundary from './routes/errors/ErrorBoundary';
+import NotFoundPage from './routes/errors/NotFoundPage';
 const router = createBrowserRouter([
   {
     path: "/",
     Component: RootLayout,
     loader: rootLoader,
+    ErrorBoundary: RootErrorBoundary,
     children: [
       {
         index: true,
@@ -89,6 +92,10 @@ const router = createBrowserRouter([
         Component: CreateTagPage,
         loader: createTagLoader,
         action: createTagAction
+      },
+      {
+        path: "*",
+        Component: NotFoundPage
       }
     ]
   }

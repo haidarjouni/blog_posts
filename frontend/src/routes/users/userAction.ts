@@ -1,4 +1,4 @@
-import { redirect } from 'react-router-dom';
+import { data, redirect } from 'react-router-dom';
 import {deleteUser, updateUser} from '../../api/users';
 import type { UserUpdate } from '../../types/user';
 export async function userAction({ request, params }: { request: Request, params: { id?: string } }): Promise<Response> {
@@ -8,7 +8,7 @@ export async function userAction({ request, params }: { request: Request, params
           case "update-user":
                let userId = Number(params.id || null);
                if (!userId) {
-                    throw new Error("User ID is required for update");
+                    throw data("User ID is required for update", { status: 400 });
                }
                const username = String(formData.get("username") || "");
                const email = String(formData.get("email") || "");
@@ -17,19 +17,19 @@ export async function userAction({ request, params }: { request: Request, params
           case "delete-user":
                const deleteUserId = Number(formData.get("userId") || null);
                if (!deleteUserId) {
-                    throw new Error("User ID is required for deletion");
+                    throw data("User ID is required for deletion", { status: 400 });
                }
                await deleteUserAction(deleteUserId);
                return redirect("/");
           default:
-               throw new Error("Unknown intent");
+               throw data("Unknown user action", { status: 400 });
      }
 }
 
 
 export async function updateUserAction( user: UserUpdate, userId: number): Promise<void> {
       if (!userId) {
-          throw new Error("User ID is required");
+          throw data("User ID is required", { status: 400 });
      }
      const updatedUser =  await updateUser(userId, {
           username: user.username,
@@ -37,14 +37,14 @@ export async function updateUserAction( user: UserUpdate, userId: number): Promi
      });
 
      if (!updatedUser) {
-          throw new Error("Failed to update user");
+          throw data("Failed to update user", { status: 500 });
      }
      
 }
 
 export async function deleteUserAction(userId: number): Promise<void> {
      if (!userId) {
-          throw new Error("User ID is required");
+          throw data("User ID is required", { status: 400 });
      }
      await deleteUser(userId);
 }

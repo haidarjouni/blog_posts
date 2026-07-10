@@ -1,3 +1,4 @@
+import { throwApiError } from './apiError';
 import type { UserCreate, UserDetail, UserUpdate, UserRead  } from '../types/user';
 
 export async function signUp(user: UserCreate): Promise<void> {
@@ -10,7 +11,7 @@ export async function signUp(user: UserCreate): Promise<void> {
      });
 
      if (!response.ok) {
-          throw new Error("Failed to create user");
+          await throwApiError(response, "Failed to create user");
      }
 }
 
@@ -19,11 +20,9 @@ export async function getUserById(userId: number): Promise<UserDetail> {
           method: "GET",
           credentials: "include",
      });
-
-     if (!response.ok) {
-          throw new Error("Failed to fetch user");
+     if(!response.ok) {
+          await throwApiError(response, "Failed to fetch user");
      }
-     
      return await response.json();
 }
 export async function updateUser(userId: number, user: UserUpdate): Promise<UserRead> {
@@ -37,7 +36,7 @@ export async function updateUser(userId: number, user: UserUpdate): Promise<User
      });
 
      if (!response.ok) {
-          throw new Error("Failed to update user");
+          await throwApiError(response, "Failed to update user");
      }
      
      return await response.json();
@@ -48,8 +47,7 @@ export async function deleteUser(userId: number): Promise<void> {
           method: "DELETE",
           credentials: "include",
      });
-     
      if (!response.ok) {
-          throw new Error("Failed to delete user");
+          await throwApiError(response, "Failed to delete user");
      }
 }

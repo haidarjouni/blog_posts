@@ -1,10 +1,11 @@
 import type {CategoryCreate, CategoryRead, CategoryUpdate} from "../types/category";
+import { throwApiError } from "./apiError";
 
 // Read all categories for dropdowns and admin category screens.
 export async function getCategories(): Promise<CategoryRead[]> {
      const response = await fetch("http://localhost:8000/api/categories/");
      if (!response.ok) {
-           throw new Error("Failed to fetch categories");
+           await throwApiError(response, "Failed to fetch categories");
      }
      return response.json();
 }
@@ -21,7 +22,7 @@ export async function createCategory(category: CategoryCreate): Promise<Category
      });
 
      if (!response.ok) {
-          throw new Error("Failed to create category");
+          await throwApiError(response, "Failed to create category");
      }
 
      return response.json();
@@ -34,7 +35,7 @@ export async function deleteCategory(categoryId: number): Promise<void> {
      });
 
      if (!response.ok) {
-          throw new Error("Failed to delete category");
+          await throwApiError(response, "Failed to delete category");
      }
 }
 
@@ -50,7 +51,7 @@ export async function updateCategory(categoryId: number, category: CategoryUpdat
      });
 
      if (!response.ok) {
-          throw new Error("Failed to update category");
+          await throwApiError(response, "Failed to update category");
      }
 
      return response.json();
