@@ -1,10 +1,14 @@
 import type { CommentRead } from "./comment";
 import type { PostRead } from "./post";
-export type UserRead = {
+
+export type UserPublic = {
      id: number;
      username: string;
-     email: string;
      is_admin: boolean;
+}
+
+export type UserRead = UserPublic & {
+     email: string;
 }
 
 export type UserCreate = {
@@ -13,7 +17,7 @@ export type UserCreate = {
      password: string;
 }
 
-export type UserDetail = UserRead & {
+export type UserDetail = UserPublic & {
      posts: PostRead[];
      comments: CommentRead[];
 }

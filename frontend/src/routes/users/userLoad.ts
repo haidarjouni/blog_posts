@@ -1,12 +1,12 @@
 import { data } from "react-router-dom";
-import { getUserById } from "../../api/users";
+import { getUserAccountById, getUserById } from "../../api/users";
 import { requireUser } from "../../auth/guards";
-import type { UserDetail } from "../../types/user";
+import type { UserDetail, UserRead } from "../../types/user";
 type UserLoaderWithPostsData = {
      user: UserDetail;
 };
 export type UserLoaderData = {
-     user: UserDetail;
+     user: UserRead;
 };
 export async function userLoaderWithPosts({ params }: { params: { id?: string } }): Promise<UserLoaderWithPostsData> {
      if (!params.id) {
@@ -32,6 +32,6 @@ export async function userLoader({ params }: { params: { id?: string } }): Promi
      if(currentUser.id !== userId && !currentUser.is_admin) {
           throw data("You are not authorized to edit this user", { status: 403 });
      }
-     const user = await getUserById(userId);
+     const user = await getUserAccountById(userId);
      return { user };
 }

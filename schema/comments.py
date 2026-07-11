@@ -1,11 +1,11 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from .users import UserRead
-from datetime import datetime, timezone
+from .users import UserPublic
+from datetime import datetime
 
 class CommentRead(BaseModel):
      id: int = Field(gt=0)
      content: str
-     author:  UserRead
+     author: UserPublic
      post_id: int = Field(gt=0)
      created_at: datetime
      model_config = ConfigDict(from_attributes=True)

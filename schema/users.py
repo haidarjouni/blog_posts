@@ -29,14 +29,16 @@ class UserCommentRead(BaseModel):
      created_at: datetime
      model_config = ConfigDict(from_attributes=True)
      
-class UserRead(BaseModel):
+class UserPublic(BaseModel):
      id: int = Field(gt=0)
      username: str
-     email: EmailStr
      is_admin: bool
      model_config = ConfigDict(from_attributes=True)
+
+class UserRead(UserPublic):
+     email: EmailStr
      
-class UserDetails(UserRead):
+class UserDetails(UserPublic):
      posts: list[UserPostRead] = Field(default_factory=list)
      comments: list[UserCommentRead] = Field(default_factory=list)
           

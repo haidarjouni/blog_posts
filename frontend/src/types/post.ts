@@ -1,10 +1,10 @@
-import type { UserRead } from "../types/user";
+import type { UserPublic } from "../types/user";
 import type { CategoryRead } from "../types/category";
 import type { TagRead } from "../types/tag";
 import type { CommentRead } from "../types/comment";
 export type PostRead = {
   id: number;
-  author: UserRead;
+  author: UserPublic;
   title: string;
   content: string;
   status: string;

@@ -9,6 +9,7 @@ from models.user import User
 from schema.tags import TagCreate, TagRead, TagUpdate
 from services.auth import get_current_active_user
 from services.permissions import require_admin
+from services.errors import raise_database_error
 router = APIRouter()
 
 DbSession = Annotated[Session, Depends(get_db)]
@@ -43,9 +44,9 @@ def create_tag(tag: TagCreate, db: DbSession, current_user: Annotated[User, Depe
           db.add(new_tag)
           db.commit()
           db.refresh(new_tag)
-     except Exception as e:
+     except Exception:
           db.rollback()
-          raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+          raise_database_error("Could not create tag")
      return new_tag
 
 
@@ -80,9 +81,9 @@ def update_tag(tag_id: int, tag_update: TagUpdate, db: DbSession, current_user: 
           db.add(tag)
           db.commit()
           db.refresh(tag)
-     except Exception as e:
+     except Exception:
           db.rollback()
-          raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+          raise_database_error("Could not update tag")
      return tag
 
 @router.delete("/{tag_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -98,7 +99,8 @@ def delete_tag(tag_id: int, db: DbSession, current_user: Annotated[User, Depends
           tag.posts.clear()
           db.delete(tag)
           db.commit()
-     except Exception as e:
+     except Exception:
           db.rollback()
-          raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))     
+          raise_database_error("Could not delete tag")     
      return None
+

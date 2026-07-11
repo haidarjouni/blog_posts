@@ -11,6 +11,7 @@ class Settings:
      algorithm: str = "HS256"
      access_token_expire_minutes: int = 30
      refresh_token_expire_days: int = 30
+     cookie_secure: bool = False
     
     
 def get_settings() -> Settings:
@@ -27,7 +28,8 @@ def get_settings() -> Settings:
           algorithm=os.environ.get("ALGORITHM", "HS256"),
           access_token_expire_minutes=int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", "30")),
           db_connection_string=db_connection_string,
-          refresh_token_expire_days=int(os.environ.get("REFRESH_TOKEN_EXPIRE_DAYS", "30"))
+          refresh_token_expire_days=int(os.environ.get("REFRESH_TOKEN_EXPIRE_DAYS", "30")),
+          cookie_secure=os.environ.get("COOKIE_SECURE", "false").lower() == "true",
      )
 
 settings = get_settings()

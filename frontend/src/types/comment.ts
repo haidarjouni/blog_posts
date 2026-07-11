@@ -1,7 +1,7 @@
-import type { UserRead } from "./user";
+import type { UserPublic } from "./user";
 export type CommentRead = {
      id: number;
-     author: UserRead;
+     author: UserPublic;
      content: string;
      created_at: string;
 }

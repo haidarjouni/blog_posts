@@ -4,12 +4,15 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from database import get_db
+from config import settings
+from models.comment import Comment
 from models.post import Post
 from models.user import User as UserModel
-from schema.users import UserDetails, UserRead, UserCreate, UserUpdate
+from schema.users import UserDetails, UserPublic, UserRead, UserCreate, UserUpdate
 from services.passwordhashing import hash_password
 from services.auth import get_current_active_user
 from services.permissions import require_auth_or_admin
+from services.errors import raise_database_error
 router = APIRouter()
 
 DbSession = Annotated[Session, Depends(get_db)]
@@ -18,7 +21,7 @@ DbSession = Annotated[Session, Depends(get_db)]
 def get_current_user_info(current_user: Annotated[UserModel, Depends(get_current_active_user)]):
     return current_user
 
-@router.get('/', response_model=list[UserRead])
+@router.get('/', response_model=list[UserPublic])
 def get_users(db: DbSession):
     users = db.scalars(select(UserModel)).all()
     return users
@@ -43,10 +46,18 @@ def create_user(db: DbSession, user: UserCreate):
           db.add(new_user)
           db.commit()
           db.refresh(new_user)
-     except Exception as e:
+     except Exception:
           db.rollback()
-          raise HTTPException(status_code=400, detail=str(e))
+          raise_database_error("Could not create user")
      return new_user
+
+@router.get('/{user_id}/account', response_model=UserRead)
+def get_user_account(user_id: int, current_user: Annotated[UserModel, Depends(get_current_active_user)], db: DbSession):
+     user = db.get(UserModel, user_id)
+     if not user:
+          raise HTTPException(status_code=404, detail="User not found")
+     require_auth_or_admin(target_user_id=user_id, current_user=current_user)
+     return user
 
 @router.get('/{user_id}', response_model=UserDetails)
 def get_user(user_id: int, db: DbSession):
@@ -54,9 +65,9 @@ def get_user(user_id: int, db: DbSession):
           select(UserModel)
           .where(UserModel.id == user_id)
           .options(
-               selectinload(UserModel.posts).selectinload(Post.category),
-               selectinload(UserModel.posts).selectinload(Post.tags),
-               selectinload(UserModel.comments),
+               selectinload(UserModel.posts.and_(Post.status == "published")).selectinload(Post.category),
+               selectinload(UserModel.posts.and_(Post.status == "published")).selectinload(Post.tags),
+               selectinload(UserModel.comments.and_(Comment.post.has(Post.status == "published"))),
           )
      )
      if not user:
@@ -80,9 +91,9 @@ def update_user(current_user: Annotated[UserModel, Depends(get_current_active_us
      try:
           db.commit()
           db.refresh(existing_user)
-     except Exception as e:
+     except Exception:
           db.rollback()
-          raise HTTPException(status_code=400, detail=str(e))
+          raise_database_error("Could not update user")
      return existing_user
           
      
@@ -106,10 +117,11 @@ def delete_user(user_id: int, response: Response, current_user: Annotated[UserMo
                post.tags.clear()
           db.delete(user)
           db.commit()
-     except Exception as e:
+     except Exception:
           db.rollback()
-          raise HTTPException(status_code=400, detail=str(e))
+          raise_database_error("Could not delete user")
      if current_user.id == user_id:
-          response.delete_cookie(key="access_token")
-          response.delete_cookie(key="refresh_token")
+          response.delete_cookie(key="access_token", secure=settings.cookie_secure, samesite="lax")
+          response.delete_cookie(key="refresh_token", secure=settings.cookie_secure, samesite="lax")
      return
+

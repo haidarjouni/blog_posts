@@ -1,4 +1,5 @@
 from typing import List
+from datetime import datetime
 
 from sqlalchemy import Column, ForeignKey, Integer, DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -19,8 +20,8 @@ class Comment(Base):
      content: Mapped[str] = mapped_column(String(500), nullable=False)
      author_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
      post_id: Mapped[int] = mapped_column(Integer, ForeignKey("posts.id"), nullable=False)
-     created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
-     updated_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
+     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
      
      post: Mapped["Post"] = relationship("Post", back_populates="comments")
      author: Mapped["User"] = relationship("User", back_populates="comments")

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from .comments import CommentRead 
-from .users import UserRead
+from .users import UserPublic
 from .categories import CategoryRead
 from .tags import TagRead
 from datetime import datetime
@@ -54,7 +54,7 @@ class PostCreate(BaseModel):
 
 class PostRead(BaseModel):
      id: int = Field(gt=0)
-     author: UserRead
+     author: UserPublic
      title: str
      content: str
      status: str
@@ -106,7 +106,7 @@ class PostUpdate(BaseModel):
           return self
      
 class PostReadDetailed(PostRead):
-     comments: list[CommentRead] = []
+     comments: list[CommentRead] = Field(default_factory=list)
      
 class PostUpdateWithStatus(PostUpdate):
      pass

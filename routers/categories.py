@@ -9,6 +9,7 @@ from models.user import User
 from schema.categories import CategoryCreate, CategoryRead, CategoryUpdate
 from services.auth import get_current_active_user
 from services.permissions import require_admin
+from services.errors import raise_database_error
 router = APIRouter()
 
 DbSession = Annotated[Session, Depends(get_db)]
@@ -34,9 +35,9 @@ def create_category(category: CategoryCreate, db: DbSession, current_user: Annot
           db.add(new_category)
           db.commit()
           db.refresh(new_category) 
-     except Exception as e:
+     except Exception:
           db.rollback()
-          raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+          raise_database_error("Could not create category")
      return new_category
 
 @router.get('/{category_id}', response_model=CategoryRead)
@@ -68,9 +69,9 @@ def update_category(category_id: int, category: CategoryUpdate, db: DbSession, c
      try:
           db.commit()
           db.refresh(existing_category)
-     except Exception as e:
+     except Exception:
           db.rollback()
-          raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+          raise_database_error("Could not update category")
      return existing_category
 
 @router.delete('/{category_id}', status_code=status.HTTP_204_NO_CONTENT)
@@ -82,7 +83,8 @@ def delete_category(category_id: int, db: DbSession, current_user: Annotated[Use
      try:
           db.delete(existing_category)
           db.commit()
-     except Exception as e:
+     except Exception:
           db.rollback()
-          raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+          raise_database_error("Could not delete category")
      return None
+

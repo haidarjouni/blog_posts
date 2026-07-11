@@ -12,6 +12,7 @@ function UserPage() {
   const { data: currentUser } =useCurrentUser();
   const [openEditPanel, setOpenEditPanel] = useState<boolean>(false);
   const canManageUser = currentUser?.id === user.id || currentUser?.is_admin;
+  const visibleEmail = currentUser?.id === user.id ? currentUser.email : null;
   return (
     <div className="mx-auto w-full max-w-5xl px-6 py-12 sm:py-16 lg:py-20">
       <Link
@@ -72,9 +73,11 @@ function UserPage() {
                   </div>
                 )}
               </div>
-              <p className="mt-2 text-base font-semibold text-gray-400">
-                {user.email}
-              </p>
+              {visibleEmail && (
+                <p className="mt-2 text-base font-semibold text-gray-400">
+                  {visibleEmail}
+                </p>
+              )}
             </div>
           </div>
 

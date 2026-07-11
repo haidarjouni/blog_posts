@@ -12,6 +12,23 @@ from database import get_db
 from services.auth import authenticate_user, create_access_token, create_refresh_token, hash_refresh_token
 router = APIRouter()
 
+def set_auth_cookie(response: Response, key: str, value: str, max_age: int) -> None:
+     response.set_cookie(
+          key=key,
+          value=value,
+          httponly=True,
+          secure=settings.cookie_secure,
+          samesite="lax",
+          max_age=max_age,
+     )
+
+def delete_auth_cookie(response: Response, key: str) -> None:
+     response.delete_cookie(
+          key=key,
+          secure=settings.cookie_secure,
+          samesite="lax",
+     )
+
 @router.post('/login')
 def login_for_access_token(response: Response ,form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Annotated[Session, Depends(get_db)]):
      user: User | bool = authenticate_user(form_data.username , form_data.password, db)
@@ -28,28 +45,14 @@ def login_for_access_token(response: Response ,form_data: Annotated[OAuth2Passwo
      )
      refresh_token: str = create_refresh_token(user.id, db)
      db.commit()
-     response.set_cookie(
-          key="access_token",
-          value=access_token,
-          httponly=True,     # Prevents JavaScript reading the cookie
-          secure=False,       # Only sends over HTTPS (disable in local dev if needed)
-          samesite="lax",    # Mitigates CSRF attacks
-          max_age=settings.access_token_expire_minutes * 60,
-     )
-     response.set_cookie(
-          key="refresh_token",
-          value=refresh_token,
-          httponly=True,     # Prevents JavaScript reading the cookie
-          secure=False,       # Only sends over HTTPS (disable in local dev if needed)
-          samesite="lax",    # Mitigates CSRF attacks
-          max_age=settings.refresh_token_expire_days * 24 * 60 * 60,
-     )
+     set_auth_cookie(response, "access_token", access_token, settings.access_token_expire_minutes * 60)
+     set_auth_cookie(response, "refresh_token", refresh_token, settings.refresh_token_expire_days * 24 * 60 * 60)
      return {"message": "Logged in"}
 
 
 
 @router.post('/refresh')
-def refresh_access_token(response: Response, refresh_token: Annotated[str | None, Cookie()], db: Annotated[Session, Depends(get_db)]):
+def refresh_access_token(response: Response, db: Annotated[Session, Depends(get_db)], refresh_token: Annotated[str | None, Cookie()] = None):
      if not refresh_token:
           raise HTTPException(status_code=401, detail="Refresh token missing")
      
@@ -68,22 +71,8 @@ def refresh_access_token(response: Response, refresh_token: Annotated[str | None
      new_refresh_token = create_refresh_token(result.user_id, db)
      
      result.revoked_at = datetime.now(timezone.utc)
-     response.set_cookie(
-          key="access_token",
-          value=access_token,
-          httponly=True,     # Prevents JavaScript reading the cookie
-          secure=False,       # Only sends over HTTPS (disable in local dev if needed)
-          samesite="lax",    # Mitigates CSRF attacks
-          max_age=settings.access_token_expire_minutes * 60,
-     )
-     response.set_cookie(
-          key="refresh_token",
-          value=new_refresh_token,
-          httponly=True,     # Prevents JavaScript reading the cookie
-          secure=False,       # Only sends over HTTPS (disable in local dev if needed)
-          samesite="lax",    # Mitigates CSRF attacks
-          max_age=settings.refresh_token_expire_days * 24 * 60 * 60,
-     )
+     set_auth_cookie(response, "access_token", access_token, settings.access_token_expire_minutes * 60)
+     set_auth_cookie(response, "refresh_token", new_refresh_token, settings.refresh_token_expire_days * 24 * 60 * 60)
      db.commit()
      return {"message": "Token refreshed"}
 
@@ -97,6 +86,6 @@ def logout(response: Response, db: Annotated[Session, Depends(get_db)], refresh_
                result.revoked_at = datetime.now(timezone.utc)
                db.commit()
                
-     response.delete_cookie(key="access_token")
-     response.delete_cookie(key="refresh_token")
+     delete_auth_cookie(response, "access_token")
+     delete_auth_cookie(response, "refresh_token")
      return

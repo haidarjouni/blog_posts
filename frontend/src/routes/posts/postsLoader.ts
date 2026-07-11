@@ -1,6 +1,6 @@
 import { data } from "react-router-dom";
 import { getCategories } from "../../api/categories";
-import { getPostById } from "../../api/posts";
+import { getManagePostById, getPostById } from "../../api/posts";
 import { getTags } from "../../api/tags";
 import { requireUser } from "../../auth/guards";
 import type { CategoryRead } from "../../types/category";
@@ -51,7 +51,7 @@ export async function editPostLoader({ params }: { params: { id?: string } }): P
      }
 
      const user = await requireUser();
-     const post = await getPostById(postId);
+     const post = await getManagePostById(postId);
 
      if(user.id !== post.author.id && !user.is_admin){
           throw data("You are not authorized to edit this post", { status: 403 });

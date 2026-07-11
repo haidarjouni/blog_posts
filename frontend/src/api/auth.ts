@@ -1,4 +1,5 @@
 import type { UserRead } from "../types/user";
+import { apiFetch } from "./apiFetch";
 import { throwApiError } from "./apiError";
 
 type LoginRequest = {
@@ -11,14 +12,13 @@ export async function loginUser(request: LoginRequest): Promise<void> {
      body.set("username", request.username);
      body.set("password", request.password);
 
-     const response = await fetch("http://localhost:8000/api/auth/login/", {
+     const response = await apiFetch("/api/auth/login", {
           method: "POST",
-          credentials: "include",
           headers: {
                "Content-Type": "application/x-www-form-urlencoded",
           },
           body,
-     });
+     }, false);
 
      if (!response.ok) {
           await throwApiError(response, "Failed to login");
@@ -26,24 +26,10 @@ export async function loginUser(request: LoginRequest): Promise<void> {
 }
 
 export async function getCurrentUser() : Promise<UserRead | null> {
-     let response = await fetch("http://localhost:8000/api/users/me", {
+     const response = await apiFetch("/api/users/me", {
           method: "GET",
-          credentials: "include",
      });
 
-     if(response.status === 401) {
-          const refresh = await refreshSession();
-          
-          if(!refresh) {
-               return null;
-          }
-
-          response = await fetch("http://localhost:8000/api/users/me", {
-               method: "GET",
-               credentials: "include",
-          });
-
-     }
      if (response.status === 401) {
           return null;
      }
@@ -60,17 +46,15 @@ export async function getCurrentUser() : Promise<UserRead | null> {
 
 
 export async function refreshSession(): Promise<boolean>{
-     const response = await fetch("http://localhost:8000/api/auth/refresh", {
+     const response = await apiFetch("/api/auth/refresh", {
           method: "POST",
-          credentials: "include",
-     });
+     }, false);
      return response.ok;
 }
 
 export async function logout(): Promise<void> {
-     const response = await fetch("http://localhost:8000/api/auth/logout", {
+     const response = await apiFetch("/api/auth/logout", {
           method: "POST",
-          credentials: "include",
      });
      if (!response.ok) {
           await throwApiError(response, "Failed to logout");
