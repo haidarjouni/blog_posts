@@ -90,7 +90,7 @@ The backend repeats these checks so users cannot bypass permissions by calling t
 ### 1. Clone the project
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/haidarjouni/blog_posts.git
 cd blog_posts
 ```
 
@@ -112,9 +112,12 @@ DB_CONNECTION_STRING=postgresql+psycopg://postgres:admin@localhost/blog_posts
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 REFRESH_TOKEN_EXPIRE_DAYS=30
+COOKIE_SECURE=false
 ```
 
 Update the database username, password, host, and database name for your local PostgreSQL setup.
+
+`COOKIE_SECURE=false` is for local HTTP development. Use `COOKIE_SECURE=true` in production so auth cookies are sent only over HTTPS.
 
 ### 4. Run database migrations
 
@@ -141,7 +144,23 @@ cd frontend
 npm install
 ```
 
-### 7. Start the frontend
+### 7. Configure frontend environment
+
+Create a frontend env file:
+
+```bash
+cp .env.example .env.development.local
+```
+
+For local development it should contain:
+
+```env
+VITE_API_URL=http://localhost:8000
+```
+
+This keeps the backend URL out of the React source code. In production, set `VITE_API_URL` to the deployed API URL or leave it empty when the frontend is served behind the same `/api` origin.
+
+### 8. Start the frontend
 
 ```bash
 npm run dev
@@ -152,28 +171,6 @@ The frontend runs on:
 ```text
 http://localhost:5173
 ```
-
-## Screenshots
-
-Screenshots should be added before publishing the project.
-
-Suggested screenshots:
-
-- home page with latest posts
-- post detail page with comments
-- login page
-- create post page
-- user profile page
-- category/tag admin page
-- unauthorized page
-
-Recommended folder:
-
-```text
-docs/screenshots/
-```
-
-Then reference them in this section with Markdown image links.
 
 ## API Overview
 
@@ -190,9 +187,10 @@ Then reference them in this section with Markdown image links.
 | Method | Endpoint | Description |
 | --- | --- | --- |
 | `GET` | `/api/users/me` | Return the currently authenticated user |
-| `GET` | `/api/users/` | List users |
+| `GET` | `/api/users/` | List public users without email addresses |
 | `POST` | `/api/users/` | Create a user |
-| `GET` | `/api/users/{user_id}` | Get a user profile with posts and comments |
+| `GET` | `/api/users/{user_id}` | Get a public user profile with published posts and comments |
+| `GET` | `/api/users/{user_id}/account` | Get private account data, owner/admin only |
 | `PATCH` | `/api/users/{user_id}` | Update user profile, owner/admin only |
 | `DELETE` | `/api/users/{user_id}` | Delete user, owner/admin only |
 
@@ -200,9 +198,10 @@ Then reference them in this section with Markdown image links.
 
 | Method | Endpoint | Description |
 | --- | --- | --- |
-| `GET` | `/api/posts/` | List posts ordered by newest first |
+| `GET` | `/api/posts/` | List published posts ordered by newest first |
 | `POST` | `/api/posts/` | Create a post, login required |
-| `GET` | `/api/posts/{post_id}` | Get post details with comments |
+| `GET` | `/api/posts/{post_id}` | Get published post details with comments |
+| `GET` | `/api/posts/{post_id}/manage` | Get any owned/admin-managed post for editing |
 | `PATCH` | `/api/posts/{post_id}` | Update post, author/admin only |
 | `DELETE` | `/api/posts/{post_id}` | Delete post, author/admin only |
 
@@ -240,7 +239,5 @@ The main learning goals are complete. The app has working backend CRUD, relation
 
 Next steps are packaging and presentation:
 
-- add screenshots
 - Dockerize backend, frontend, and PostgreSQL
 - polish README setup after Docker is added
-- publish to GitHub
