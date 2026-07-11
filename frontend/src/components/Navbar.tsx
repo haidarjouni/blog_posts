@@ -2,18 +2,19 @@ import { Form, Link } from "react-router-dom";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 
 function Navbar() {
-     const { data: user } = useCurrentUser() ;
+     const { data: user } = useCurrentUser();
      const navigationItems = [
-     { name: "Home", href: "/" },
-     ...(user ? [{ name: "View Profile", href: `/users/${user.id}` }] : []),
-     ...(user ? [{ name: "Create Post", href: "/create-post" }] : []),
-     ...(user?.is_admin
-          ? [
-               { name: "Create Category", href: "/create-category" },
-               { name: "Create Tag", href: "/create-tag" },
-          ]
-          : []),
+          { name: "Home", href: "/" },
+          ...(user ? [{ name: "View Profile", href: `/users/${user.id}` }] : []),
+          ...(user ? [{ name: "Create Post", href: "/create-post" }] : []),
+          ...(user?.is_admin
+               ? [
+                    { name: "Create Category", href: "/create-category" },
+                    { name: "Create Tag", href: "/create-tag" },
+               ]
+               : []),
      ];
+
      return (
           <nav className="h-[70px] relative w-full px-6 md:px-16 lg:px-24 xl:px-32 flex items-center justify-between z-20 bg-white text-gray-700 shadow-[0px_4px_25px_0px_#0000000D] transition-all">
                <div className="w-44"></div>

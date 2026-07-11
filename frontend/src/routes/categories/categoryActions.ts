@@ -4,7 +4,7 @@ import { createCategory, deleteCategory, updateCategory } from "../../api/catego
 export async function createCategoryAction({ request }: { request: Request }) {
      const formData = await request.formData();
      switch(String(formData.get("intent") || "")){
-          case "create-category":
+          case "create-category": {
                const name = String(formData.get("name") || "");
                const description = String(formData.get("description") || "");
                try {
@@ -25,14 +25,16 @@ export async function createCategoryAction({ request }: { request: Request }) {
                     throw error;
                }
                return redirect("/create-category");
-          case "delete-category":
+          }
+          case "delete-category": {
                const categoryId = Number(formData.get("categoryId") || null);
                if (!categoryId) {
                     throw data("Category ID is required for deletion", { status: 400 });
                }
                await deleteCategory(categoryId);
                return redirect("/create-category");
-          case "update-category":
+          }
+          case "update-category": {
                const updateCategoryId = Number(formData.get("categoryId") || null);
                if(!updateCategoryId) {
                     throw data("Category ID is required for update", { status: 400 });
@@ -58,6 +60,7 @@ export async function createCategoryAction({ request }: { request: Request }) {
                     throw error;
                }
                return redirect("/create-category");
+          }
           default:
                throw data("Unknown category action", { status: 400 });
           

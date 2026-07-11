@@ -63,7 +63,7 @@ export async function updatePostAction({ request, params }: { request: Request; 
 export async function createCommentAction({request,params}: {request: Request; params: { id?: string };}) {
      const formData = await request.formData();
      switch(String(formData.get("intent") || "")){
-          case "create-comment":
+          case "create-comment": {
                const content = String(formData.get("content")|| "");
                if(!params.id){
                     throw data("Post ID is required for comment creation", { status: 400 });
@@ -86,14 +86,16 @@ export async function createCommentAction({request,params}: {request: Request; p
                     throw error;
                }
                return redirect(`/posts/${params.id}`);
-          case "delete-comment":
+          }
+          case "delete-comment": {
                const commentId = String(formData.get("comment_id")|| "");
                if(!commentId){
                     throw data("Comment ID is required for deletion", { status: 400 });
                }
                await deleteComment(Number(commentId));
                return redirect(`/posts/${params.id}`);
-          case "update-comment":
+          }
+          case "update-comment": {
                const editedCommentId = String(formData.get("comment_id")|| "");
                const editedContent = String(formData.get("content")|| "");
                if(!editedCommentId){
@@ -118,13 +120,15 @@ export async function createCommentAction({request,params}: {request: Request; p
                     throw error;
                }
                return redirect(`/posts/${params.id}`);
-          case "delete-post":
+          }
+          case "delete-post": {
                const postId = String(formData.get("post_id")|| "");
                if(!postId){
                     throw data("Post ID is required for deletion", { status: 400 });
                }
                await deletePost(Number(postId));
                return redirect(`/`);
+          }
           default:
                throw data("Unknown post action", { status: 400 });
      }

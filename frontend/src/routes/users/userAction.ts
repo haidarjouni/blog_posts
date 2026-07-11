@@ -5,8 +5,8 @@ export async function userAction({ request, params }: { request: Request, params
      const formData = await request.formData();
      const intent = String(formData.get("intent") || "");
      switch (intent) {
-          case "update-user":
-               let userId = Number(params.id || null);
+          case "update-user": {
+               const userId = Number(params.id || null);
                if (!userId) {
                     throw data("User ID is required for update", { status: 400 });
                }
@@ -23,13 +23,15 @@ export async function userAction({ request, params }: { request: Request, params
                     throw error;
                }
                return redirect(`/users/${userId}`);
-          case "delete-user":
+          }
+          case "delete-user": {
                const deleteUserId = Number(formData.get("userId") || null);
                if (!deleteUserId) {
                     throw data("User ID is required for deletion", { status: 400 });
                }
                await deleteUserAction(deleteUserId);
                return redirect("/");
+          }
           default:
                throw data("Unknown user action", { status: 400 });
      }

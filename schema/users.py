@@ -80,22 +80,3 @@ class UserUpdate(BaseModel):
                raise ValueError("At least one field must be provided")
           return self
      
-class TokenRequest(BaseModel):
-     user_id: int | None = Field(default=None, gt=0)
-     
-class Token(BaseModel):
-     access_token: str = Field(min_length=1)
-     token_type: str = Field(min_length=1)
-     refresh_token: str = Field(min_length=1)
-     
-class RefreshTokenRequest(BaseModel):
-     refresh_token: str = Field(min_length=1)
-
-     # This Pydantic decorator strips accidental spaces and rejects blank refresh tokens.
-     @field_validator("refresh_token")
-     @classmethod
-     def validate_refresh_token(cls, refresh_token: str) -> str:
-          refresh_token = refresh_token.strip()
-          if not refresh_token:
-               raise ValueError("Refresh token cannot be empty")
-          return refresh_token

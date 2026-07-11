@@ -1,4 +1,4 @@
-import { data, redirect } from "react-router-dom";
+import { redirect } from "react-router-dom";
 import { getCurrentUser } from "../api/auth";
 
 export async function requireUser() {
@@ -11,12 +11,3 @@ export async function requireUser() {
   return user;
 }
 
-export async function requireAdmin() {
-  const user = await requireUser();
-
-  if (!user.is_admin) {
-    throw data("You do not have permission to access this page", { status: 403 });
-  }
-
-  return user;
-}

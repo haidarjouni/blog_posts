@@ -12,12 +12,12 @@ from schema.posts import PostCreate, PostRead, PostReadDetailed, PostUpdate
 from schema.comments import CommentCreate, CommentRead
 from models.comment import Comment
 from services.auth import get_current_active_user
-from services.permissions import require_auth_or_admin, require_admin, require_login
+from services.permissions import require_auth_or_admin, require_login
 router = APIRouter()
 
 DbSession = Annotated[Session, Depends(get_db)]
 
-# Creates a URL-friendly version of the tag name.
+# Creates a URL-friendly slug from a post title.
 def make_slug(name: str) -> str:
     return name.lower().strip().replace(" ", "-")
 

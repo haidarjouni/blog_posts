@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 from config import settings
 from database import get_db
 from models.user import User
-from schema.users import TokenRequest
 from services.passwordhashing import verify_password
 import secrets
 import hashlib
@@ -65,10 +64,9 @@ def get_current_user( db: Annotated[Session, Depends(get_db)], access_token: Ann
           if user_id is None:
                raise credentials_exception
           user_id = int(user_id)
-          token_data = TokenRequest(user_id=user_id)
      except jwt.PyJWTError:
           raise HTTPException(status_code=401, detail="Invalid token")
-     user = db.get(User, token_data.user_id)
+     user = db.get(User, user_id)
      if user is None:
           raise credentials_exception
      return user
