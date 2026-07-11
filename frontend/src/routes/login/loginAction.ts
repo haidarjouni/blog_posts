@@ -1,12 +1,14 @@
 import { data, isRouteErrorResponse, redirect } from "react-router-dom";
 import { loginUser } from "../../api/auth";
 import { logout } from "../../api/auth";
+import { queryClient } from "../../lib/queryClient";
 export async function loginAction({ request }: { request: Request }) {
      const formData = await request.formData();
      const username = String(formData.get("username") || "");
      const password = String(formData.get("password") || "");
      try {
           await loginUser({ username, password });
+          await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
      } catch (error) {
           if (isRouteErrorResponse(error) && (error.status === 400 || error.status === 401)) {
                const message = typeof error.data === "string" ? error.data : "Failed to login";
@@ -20,5 +22,6 @@ export async function loginAction({ request }: { request: Request }) {
 
 export async function logoutAction() {
      await logout();
+     queryClient.setQueryData(["currentUser"], null);
      return redirect("/");
 }

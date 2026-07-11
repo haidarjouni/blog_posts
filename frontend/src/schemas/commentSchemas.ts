@@ -1,7 +1,7 @@
 import * as z from "zod";
 
 export const commentCreateSchema = z.object({
-     content: z.string().trim().min(1, "Comment content is required").max(1000, "Comment content must be at most 1000 characters long"),
+     content: z.string().trim().min(1, "Comment content is required").max(500, "Comment content must be at most 500 characters long"),
 });
 
 export const commentUpdateSchema = commentCreateSchema.partial();

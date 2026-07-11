@@ -1,19 +1,13 @@
-import { Outlet, useLoaderData } from "react-router-dom";
-import Navbar from "../components/Navbar";
-import type { UserRead } from "../types/user";
-
-type RootLoaderData = {
-  user: UserRead | null;
-};
+import { Outlet } from "react-router-dom";
+import Navbar from "../components/Navbar"; 
 
 function RootLayout() {
-  const { user } = useLoaderData() as RootLoaderData;
 
   return (
     <>
-      <Navbar user={user} />
+      <Navbar />
       <main className="content-area">
-        <Outlet context={{ user }} />
+        <Outlet  />
       </main>
     </>
   );

@@ -58,6 +58,7 @@ export async function getCurrentUser() : Promise<UserRead | null> {
      return await response.json();
 }
 
+
 export async function refreshSession(): Promise<boolean>{
      const response = await fetch("http://localhost:8000/api/auth/refresh", {
           method: "POST",

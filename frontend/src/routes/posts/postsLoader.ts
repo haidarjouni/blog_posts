@@ -19,7 +19,6 @@ export type EditPostLoaderData = {
      tags: TagRead[];
 }
 export async function createPostLoader(): Promise<CreatePostLoaderData > {
-     await requireUser();
      const categories = await getCategories();
      const tags = await getTags();
      return {

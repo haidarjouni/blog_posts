@@ -1,11 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Form, Link, useActionData, useLoaderData, useNavigation, useOutletContext, useSubmit } from "react-router-dom";
+import { Form, Link, useActionData, useLoaderData, useNavigation, useSubmit } from "react-router-dom";
 import type { PostDetailLoaderData } from "./postsLoader";
 import { commentCreateSchema, type CreateCommentInput } from "../../schemas/commentSchemas";
 import type { CommentRead } from "../../types/comment";
-import type { UserRead } from "../../types/user";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 
 type CommentActionData = {
   error?: string;
@@ -158,7 +158,7 @@ function PostPage() {
   const [openPostMenuId, setOpenPostMenuId] = useState<boolean>(false);
   const isSubmitting = navigation.state === "submitting";
   const paragraphs = post.content.split("\n").filter(Boolean);
-  const user = useOutletContext<{ user: UserRead | null }>().user;
+  const { data: user, isLoading: isUserLoading } = useCurrentUser();
   return (
     <article className="mx-auto w-full max-w-3xl px-6 py-14 sm:py-20 lg:py-24">
       <Link
@@ -263,7 +263,25 @@ function PostPage() {
           </div>
         </div>
 
-        <CreateCommentForm actionData={actionData} isSubmitting={isSubmitting} />
+        {isUserLoading ? (
+          <p className="mt-8 rounded-md border border-gray-200 px-4 py-5 text-base font-semibold text-gray-500">
+            Checking whether you can comment...
+          </p>
+        ) : user ? (
+          <CreateCommentForm actionData={actionData} isSubmitting={isSubmitting} />
+        ) : (
+          <div className="mt-8 rounded-md border border-gray-200 px-4 py-5">
+            <p className="text-base font-semibold text-gray-900">
+              Log in to join the discussion.
+            </p>
+            <Link
+              to="/login"
+              className="mt-4 inline-flex h-10 items-center justify-center rounded-md bg-gray-900 px-4 text-sm font-semibold text-white transition hover:bg-gray-700"
+            >
+              Log in
+            </Link>
+          </div>
+        )}
 
         <div className="mt-10 space-y-4">
           {post.comments.length === 0 ? (

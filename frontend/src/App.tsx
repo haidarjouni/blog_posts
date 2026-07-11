@@ -12,7 +12,6 @@ import UserPage from './routes/users/UserPage';
 import EditUserPage from './routes/users/EditUserPage';
 import { homeLoader } from './routes/home/homeLoader';
 import { loginAction, logoutAction } from './routes/login/loginAction';
-import { rootLoader } from './layout/rootLoader';
 import { signupAction } from './routes/signup/signupAction';
 import { SignupPage } from './routes/signup/SignupPage';
 import { createPostLoader, editPostLoader, getPostByIdLoader } from './routes/posts/postsLoader';
@@ -25,11 +24,12 @@ import { userLoaderWithPosts, userLoader } from './routes/users/userLoad';
 import { userAction } from './routes/users/userAction';
 import RootErrorBoundary from './routes/errors/ErrorBoundary';
 import NotFoundPage from './routes/errors/NotFoundPage';
+import UnauthorizedPage from './routes/errors/UnauthorizedPage';
+import AuthGuard from './lib/AuthGuard';
 const router = createBrowserRouter([
   {
     path: "/",
     Component: RootLayout,
-    loader: rootLoader,
     ErrorBoundary: RootErrorBoundary,
     children: [
       {
@@ -37,17 +37,10 @@ const router = createBrowserRouter([
         Component: HomePage,
         loader: homeLoader
       },
+      //public
       {
-        path: "users/:id",
-        Component: UserPage,
-        loader: userLoaderWithPosts,
-        action: userAction
-      },
-      {
-        path: "users/:id/edit",
-        Component: EditUserPage,
-        loader: userLoader,
-        action: userAction
+        path: "*",
+        Component: NotFoundPage
       },
       {
         path: "signup",
@@ -60,8 +53,14 @@ const router = createBrowserRouter([
         action: loginAction
       },
       {
-        path: "logout",
-        action: logoutAction
+        path: "unauthorized",
+        Component: UnauthorizedPage
+      },
+      {
+        path: "users/:id",
+        Component: UserPage,
+        loader: userLoaderWithPosts,
+        action: userAction
       },
       {
         path: "posts/:id",
@@ -69,33 +68,52 @@ const router = createBrowserRouter([
         loader: getPostByIdLoader,
         action: createCommentAction
       },
+      // Authenticated routes
       {
-        path: "posts/:id/edit",
-        Component: EditPostPage,
-        loader: editPostLoader,
-        action: updatePostAction
+        element: <AuthGuard />,
+        children: [
+            {
+              path: "users/:id/edit",
+              Component: EditUserPage,
+              loader: userLoader,
+              action: userAction
+            },
+
+            {
+              path: "logout",
+              action: logoutAction
+            },
+            {
+              path: "posts/:id/edit",
+              Component: EditPostPage,
+              loader: editPostLoader,
+              action: updatePostAction
+            },
+            {
+              path: "create-post",
+              Component: CreatePostPage,
+              loader: createPostLoader,
+              action: createPostsAction
+            },
+        ]
       },
+      // Admin routes
       {
-        path: "create-post",
-        Component: CreatePostPage,
-        loader: createPostLoader,
-        action: createPostsAction
-      },
-      {
-        path: "create-category",
-        Component: CreateCategoryPage,
-        loader: createCategoryLoader,
-        action: createCategoryAction
-      },
-      {
-        path: "create-tag",
-        Component: CreateTagPage,
-        loader: createTagLoader,
-        action: createTagAction
-      },
-      {
-        path: "*",
-        Component: NotFoundPage
+        element: <AuthGuard allowedRoles={["admin"]} />,
+        children: [
+          {
+            path: "create-category",
+            Component: CreateCategoryPage,
+            loader: createCategoryLoader,
+            action: createCategoryAction
+          },
+          {
+            path: "create-tag",
+            Component: CreateTagPage,
+            loader: createTagLoader,
+            action: createTagAction
+          }
+        ]
       }
     ]
   }

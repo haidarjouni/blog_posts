@@ -27,7 +27,7 @@ def get_posts(db: DbSession):
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=PostRead)
 def create_post(post: PostCreate, db: DbSession, current_user: Annotated[User, Depends(get_current_active_user)]):
-     require_admin(current_user)
+     require_login(current_user)
      category = db.get(Category, post.category_id)
      
      if not category:

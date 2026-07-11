@@ -29,9 +29,9 @@ export async function userLoader({ params }: { params: { id?: string } }): Promi
           throw data("User ID must be a number", { status: 400 });
      }
      const currentUser = await requireUser();
-     const user = await getUserById(userId);
-     if(currentUser.id !== user.id && !currentUser.is_admin) {
+     if(currentUser.id !== userId && !currentUser.is_admin) {
           throw data("You are not authorized to edit this user", { status: 403 });
      }
+     const user = await getUserById(userId);
      return { user };
 }

@@ -1,39 +1,29 @@
 import { Form, Link } from "react-router-dom";
-import type { UserRead } from "../types/user";
+import { useCurrentUser } from "../hooks/useCurrentUser";
 
-type NavbarProps = {
-     user: UserRead | null;
-};
-
-type navigationItem = {
-     name: string;
-     href: string;
-};
-
-const navigationItems: navigationItem[] = [
+function Navbar() {
+     const { data: user } = useCurrentUser() ;
+     const navigationItems = [
      { name: "Home", href: "/" },
-     { name: "Create Post", href: "/create-post" },
-     { name: "Create Category", href: "/create-category" },
-     { name: "Create Tag", href: "/create-tag" },
-];
-
-function Navbar({ user }: NavbarProps) {
+     ...(user ? [{ name: "View Profile", href: `/users/${user.id}` }] : []),
+     ...(user ? [{ name: "Create Post", href: "/create-post" }] : []),
+     ...(user?.is_admin
+          ? [
+               { name: "Create Category", href: "/create-category" },
+               { name: "Create Tag", href: "/create-tag" },
+          ]
+          : []),
+     ];
      return (
           <nav className="h-[70px] relative w-full px-6 md:px-16 lg:px-24 xl:px-32 flex items-center justify-between z-20 bg-white text-gray-700 shadow-[0px_4px_25px_0px_#0000000D] transition-all">
                <div className="w-44"></div>
 
                <ul className="md:flex hidden items-center gap-10">
-                    {navigationItems.filter(item => {
-                         const adminOnlyItems = ["Create Post", "Create Category", "Create Tag"];
-                         if (adminOnlyItems.includes(item.name)) {
-                              return user && user.is_admin;
-                         }
-                         return true;
-                    }).map((item) => (
+                    {navigationItems.map((item) => (
                          <li key={item.href}>
-                              <a className="hover:text-gray-500/80 transition" href={item.href}>
+                              <Link className="hover:text-gray-500/80 transition" to={item.href}>
                                    {item.name}
-                              </a>
+                              </Link>
                          </li>
                     ))}
                </ul>

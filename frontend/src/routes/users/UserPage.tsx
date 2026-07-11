@@ -1,6 +1,7 @@
-import { Form, Link, useLoaderData, useOutletContext } from "react-router-dom";
-import type { UserDetail, UserRead } from "../../types/user";
+import { Form, Link, useLoaderData } from "react-router-dom";
+import type { UserDetail } from "../../types/user";
 import { useState } from "react";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 
 type UserPageProps = {
   user: UserDetail;
@@ -8,7 +9,7 @@ type UserPageProps = {
 
 function UserPage() {
   const { user } = useLoaderData() as UserPageProps;
-  const { user: currentUser } = useOutletContext<{ user: UserRead | null }>();
+  const { data: currentUser } =useCurrentUser();
   const [openEditPanel, setOpenEditPanel] = useState<boolean>(false);
   const canManageUser = currentUser?.id === user.id || currentUser?.is_admin;
   return (

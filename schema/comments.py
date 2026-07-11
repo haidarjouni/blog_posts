@@ -11,7 +11,7 @@ class CommentRead(BaseModel):
      model_config = ConfigDict(from_attributes=True)
      
 class CommentCreate(BaseModel):
-     content: str = Field(min_length=1, max_length=1000)
+     content: str = Field(min_length=1, max_length=500)
 
      # This Pydantic decorator strips accidental spaces and blocks empty comments.
      @field_validator("content")
