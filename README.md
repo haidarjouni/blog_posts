@@ -85,7 +85,15 @@ Resource ownership checks stay close to the resource:
 
 The backend repeats these checks so users cannot bypass permissions by calling the API directly.
 
-## Setup
+## Docker Setup
+
+The application runs as three Docker Compose services:
+
+- `frontend`: React and Vite on port `5173`
+- `backend`: FastAPI and Uvicorn on port `8000`
+- `db`: PostgreSQL 17 with persistent volume storage
+
+Compose creates a private network for the services. The backend connects to PostgreSQL using the service hostname `db`, while browser-side React requests use `http://localhost:8000`.
 
 ### 1. Clone the project
 
@@ -94,82 +102,101 @@ git clone https://github.com/haidarjouni/blog_posts.git
 cd blog_posts
 ```
 
-### 2. Create backend environment
+### 2. Configure backend environment variables
 
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-### 3. Configure environment variables
-
-Create a `.env` file in the project root:
+Copy `.env.example` to a new `.env` file in the project root and provide a new secret key:
 
 ```env
 SECRET_KEY=replace-with-a-long-random-secret
-DB_CONNECTION_STRING=postgresql+psycopg://postgres:admin@localhost/blog_posts
+DB_CONNECTION_STRING=postgresql+psycopg://postgres:admin@db:5432/blog_posts
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 REFRESH_TOKEN_EXPIRE_DAYS=30
 COOKIE_SECURE=false
 ```
 
-Update the database username, password, host, and database name for your local PostgreSQL setup.
+Do not commit `.env`. The hostname is `db` because the backend and PostgreSQL run on the same Compose network.
 
 `COOKIE_SECURE=false` is for local HTTP development. Use `COOKIE_SECURE=true` in production so auth cookies are sent only over HTTPS.
 
+### 3. Build and start the application
+
+```bash
+docker compose up --build
+```
+
+This command builds the custom frontend and backend images, pulls PostgreSQL if needed, creates the network and database volume, and starts all three containers.
+
+The application is available at:
+
+- Frontend: `http://localhost:5173`
+- Backend API: `http://localhost:8000`
+- Interactive API docs: `http://localhost:8000/docs`
+
 ### 4. Run database migrations
+
+On the first run, open another terminal and apply the Alembic migrations:
+
+```bash
+docker compose exec backend alembic upgrade head
+```
+
+PostgreSQL creates the database itself, while Alembic creates the application tables and columns. The named `postgres_data` volume preserves them when containers are recreated.
+
+To check the tables:
+
+```bash
+docker compose exec db psql -U postgres -d blog_posts -c "\dt"
+```
+
+### 5. Stop or restart the application
+
+```bash
+docker compose down
+```
+
+This removes the containers and Compose network but keeps the PostgreSQL volume and its data. Avoid `docker compose down -v` unless you intentionally want to delete the database data.
+
+For a normal restart:
+
+```bash
+docker compose up
+```
+
+After changing source code or a Dockerfile:
+
+```bash
+docker compose up --build
+```
+
+After changing only Compose configuration, such as environment variables or ports:
+
+```bash
+docker compose up -d --force-recreate
+```
+
+## Docker Notes
+
+- `0.0.0.0` is the listening address inside a container; use `localhost` from the browser.
+- `VITE_API_URL=http://localhost:8000` is supplied to the frontend by Compose because React runs in the browser.
+- The backend uses `db:5432` because `db` is PostgreSQL's Compose service name.
+- Docker images contain snapshots of the source code. Rebuild after changing source unless development bind mounts are added.
+- The frontend currently uses Vite's development server. A production deployment should build the static frontend and serve it with a production web server.
+
+## Optional Local Development Without Docker
+
+The application can still run directly on the host. Install PostgreSQL locally or publish the database container's port, use `localhost` instead of `db` in `DB_CONNECTION_STRING`, create a Python virtual environment, install `requirements.txt`, and run:
 
 ```bash
 alembic upgrade head
-```
-
-### 5. Start the backend
-
-```bash
 uvicorn main:app --reload
 ```
 
-The API runs on:
-
-```text
-http://localhost:8000
-```
-
-### 6. Install frontend dependencies
+For the frontend, install its dependencies and create `frontend/.env.development.local` containing `VITE_API_URL=http://localhost:8000`:
 
 ```bash
-cd frontend
 npm install
-```
-
-### 7. Configure frontend environment
-
-Create a frontend env file:
-
-```bash
-cp .env.example .env.development.local
-```
-
-For local development it should contain:
-
-```env
-VITE_API_URL=http://localhost:8000
-```
-
-This keeps the backend URL out of the React source code. In production, set `VITE_API_URL` to the deployed API URL or leave it empty when the frontend is served behind the same `/api` origin.
-
-### 8. Start the frontend
-
-```bash
 npm run dev
-```
-
-The frontend runs on:
-
-```text
-http://localhost:5173
 ```
 
 ## API Overview
@@ -235,9 +262,6 @@ http://localhost:5173
 
 ## Project Status
 
-The main learning goals are complete. The app has working backend CRUD, relationships, authentication, protected actions, frontend routing, validation, and error handling.
+The main learning goals are complete. The app has working backend CRUD, relationships, authentication, protected actions, frontend routing, validation, error handling, and a Docker Compose development environment for the frontend, backend, and PostgreSQL.
 
-Next steps are packaging and presentation:
-
-- Dockerize backend, frontend, and PostgreSQL
-- polish README setup after Docker is added
+Possible next steps include a production frontend build, automated migration startup, production secret management, tests, and deployment.
