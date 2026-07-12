@@ -31,14 +31,16 @@ function CreatePostPage() {
   });
 
   function onSubmit(formData: CreatePostInput) {
-    submit(
-      {
-        ...formData,
-        category_id: String(formData.category_id),
-        tags: formData.tags.map(String),
-      },
-      { method: "post" }
-    );
+      const payload = new FormData();
+
+      payload.set("title", formData.title);
+      payload.set("content", formData.content);
+      payload.set("category_id", String(formData.category_id));
+      payload.set("status", formData.status);
+      formData.tags.forEach((tag) => {
+        payload.append("tags", String(tag));
+      });
+      submit(payload, { method: "post" });
   }
 
   return (
