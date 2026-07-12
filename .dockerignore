@@ -1,0 +1,13 @@
+.git
+.venv
+venv
+__pycache__
+*.pyc
+.env
+.idea
+.vscode
+tests
+logs
+.agents
+
+frontend/
