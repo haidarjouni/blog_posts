@@ -263,5 +263,3 @@ npm run dev
 ## Project Status
 
 The main learning goals are complete. The app has working backend CRUD, relationships, authentication, protected actions, frontend routing, validation, error handling, and a Docker Compose development environment for the frontend, backend, and PostgreSQL.
-
-Possible next steps include a production frontend build, automated migration startup, production secret management, tests, and deployment.
